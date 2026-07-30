@@ -18,7 +18,6 @@
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html,body{width:100%; height:100%; overflow:hidden; background:var(--void); font-family:'Segoe UI',Tahoma,sans-serif; color:var(--text); user-select:none;}
 
-  /* ===== المسرح ===== */
   #stage{position:relative; width:100%; height:100vh; overflow:hidden;
     background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%); }
 
@@ -27,6 +26,10 @@
     background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size:42px 42px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 85%);}
 
+  /* لوحة PixiJS: تحتوي الكلمات + الجسيمات + موجات الصدمة */
+  #pixiHost{position:absolute; inset:0; z-index:4;}
+  #pixiHost canvas{display:block; width:100%; height:100%;}
+
   #scanlines{position:absolute; inset:0; z-index:35; pointer-events:none; opacity:0.08;
     background: repeating-linear-gradient(0deg, #000 0px, transparent 1px, transparent 2px, #000 3px);
     mix-blend-mode:overlay;}
@@ -34,7 +37,6 @@
     box-shadow: inset 0 0 160px 40px rgba(0,0,0,0.75);}
   #noise{position:absolute; inset:0; z-index:33; pointer-events:none; opacity:0; transition:opacity .12s;}
 
-  /* ===== HUD ===== */
   #hud{position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start;
     padding:16px 20px; z-index:10; pointer-events:none; opacity:0; transition:opacity .5s;}
   #hud.show{opacity:1;}
@@ -51,33 +53,12 @@
   #hudRight .glass{ padding:5px 12px; font-size:10px; color:var(--dim); letter-spacing:1px;}
   #hudRight b{ color:var(--amber2); font-weight:700;}
 
-  /* ===== النواة المركزية ===== */
   #core{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); width:130px; height:66px; z-index:5;}
   #core svg{ width:100%; height:100%; filter:drop-shadow(0 0 16px rgba(63,232,201,.6)); }
-  #core.hit{ animation: coreHit .25s ease; }
-  @keyframes coreHit{ 0%,100%{ filter:drop-shadow(0 0 16px rgba(255,59,78,.9)); } 50%{ transform:translateX(-50%) scale(0.9);} }
 
-  /* ===== الكلمات ===== */
-  .word{ position:absolute; top:-46px; font-size:19px; white-space:nowrap; padding:6px 14px; border-radius:8px;
-    background:var(--glass); border:1px solid var(--core-dim); letter-spacing:1px; z-index:4;
-    backdrop-filter:blur(4px); box-shadow:0 0 14px rgba(63,232,201,.12);
-    opacity:0; transform:scale(0.6); transition:opacity .28s ease, transform .28s cubic-bezier(.2,1.4,.4,1); }
-  .word.in{ opacity:1; transform:scale(1); }
-  .word .typed{ color:var(--amber2); text-shadow:0 0 8px rgba(255,180,84,.8);}
-  .word .rest{ color:var(--text); }
-  .word.locked{ border-color:var(--amber); box-shadow:0 0 18px rgba(255,180,84,.4); }
-
-  .particle{ position:absolute; width:5px; height:5px; border-radius:50%; z-index:6; pointer-events:none;}
-  .shockwave{ position:absolute; border-radius:50%; border:2px solid var(--amber); z-index:6; pointer-events:none;}
-
-  /* ===== شاشة الإقلاع (اختراق) ===== */
   #bootScreen{ position:absolute; inset:0; z-index:50; background:#000; display:none;
     font-family:'Courier New',monospace; padding:8vh 6vw; color:#39ff9e; }
   #bootLines{ font-size:15px; line-height:2; text-shadow:0 0 8px rgba(57,255,158,.6);}
-  #bootLines .line{ opacity:0;}
-  #bootCursor{ display:inline-block; width:9px; height:16px; background:#39ff9e; margin-inline-start:4px;
-    animation: blink 1s step-end infinite; vertical-align:middle;}
-  @keyframes blink{ 50%{ opacity:0;} }
   #bootScreen.glitch{ animation: hardGlitch .5s steps(2) 3; }
   @keyframes hardGlitch{
     0%{ transform:translate(0,0); filter:none;}
@@ -106,18 +87,15 @@
   #defenseOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     flex-direction:column; background:rgba(0,10,8,0.4); }
   #defenseTitle{ font-size:30px; font-weight:800; color:var(--core2); letter-spacing:2px; text-align:center;
-    text-shadow:0 0 20px rgba(63,232,201,.7); opacity:0; animation: fadeUp .5s ease forwards;}
-  @keyframes fadeUp{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+    text-shadow:0 0 20px rgba(63,232,201,.7); opacity:0;}
   #countdownNum{ font-size:90px; font-weight:900; color:var(--amber2); margin-top:20px;
     text-shadow:0 0 30px rgba(255,180,84,.7); }
 
-  /* ===== شاشات البداية / النهاية ===== */
   #overlay{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
     background:rgba(5,7,13,0.86); z-index:20; text-align:center; padding:20px;}
   #overlay .panel{ padding:34px 36px; max-width:400px;}
   #overlay h1{ font-size:34px; color:var(--core2); letter-spacing:2px; text-shadow:0 0 20px rgba(63,232,201,.5); margin-bottom:12px;}
   #overlay h1.danger{ color:var(--danger); text-shadow:0 0 20px rgba(255,59,78,.6);}
-  #overlay h1.success{ color:var(--amber2); text-shadow:0 0 20px rgba(255,180,84,.6);}
   #overlay p{ color:var(--dim); font-size:13.5px; margin-bottom:20px; line-height:1.9;}
   #statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px;}
   #statsGrid .box{ padding:10px; border-radius:10px;}
@@ -128,12 +106,10 @@
     padding:12px 30px; border-radius:8px; cursor:pointer; transition:all .2s;}
   button:hover{ background:rgba(63,232,201,0.26); box-shadow:0 0 18px rgba(63,232,201,.4);}
 
-  /* ===== انتقال المستوى ===== */
   #levelUpOverlay{ position:absolute; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
     flex-direction:column; background:rgba(6,10,8,0.55);}
-  #levelUpTitle{ font-size:32px; color:var(--amber2); font-weight:800; letter-spacing:2px; text-shadow:0 0 20px rgba(255,180,84,.6);
-    opacity:0; animation: fadeUp .45s ease forwards;}
-  #levelUpSub{ margin-top:10px; font-size:13px; color:var(--dim); opacity:0; animation: fadeUp .45s ease .1s forwards;}
+  #levelUpTitle{ font-size:32px; color:var(--amber2); font-weight:800; letter-spacing:2px; text-shadow:0 0 20px rgba(255,180,84,.6); opacity:0;}
+  #levelUpSub{ margin-top:10px; font-size:13px; color:var(--dim); opacity:0;}
 
   #tapHint{ position:absolute; bottom:96px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--dim); z-index:6; display:none;}
   #mobileInput{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;}
@@ -142,7 +118,6 @@
     .hud-block{ padding:6px 10px; min-width:56px;}
     .hud-value{ font-size:17px;} .hud-label{ font-size:7.5px;}
     #core{ width:88px; height:44px;}
-    .word{ font-size:15px; padding:4px 9px;}
     #overlay h1{ font-size:24px;} #overlay .panel{ padding:26px 22px;}
     #breachTitle{ font-size:28px;} #defenseTitle{ font-size:22px;} #countdownNum{ font-size:64px;}
     button{ font-size:13px; padding:10px 24px;}
@@ -155,6 +130,7 @@
 <div id="stage">
   <canvas id="bgCanvas"></canvas>
   <div id="gridOverlay"></div>
+  <div id="pixiHost"></div>
 
   <div id="hud">
     <div class="glass hud-block">
@@ -182,7 +158,6 @@
     </svg>
   </div>
 
-  <!-- شاشة البداية -->
   <div id="overlay">
     <div class="glass panel">
       <h1>قناص الكلمات</h1>
@@ -191,18 +166,15 @@
     </div>
   </div>
 
-  <!-- انتقال المستوى -->
   <div id="levelUpOverlay">
     <div id="levelUpTitle">تم صد الهجوم</div>
     <div id="levelUpSub">الانتقال إلى المرحلة التالية...</div>
   </div>
 
-  <!-- شاشة الإقلاع الشبيهة بالاختراق -->
   <div id="bootScreen">
     <div id="bootLines"></div>
   </div>
 
-  <!-- شاشة الاختراق المزيف -->
   <div id="breachOverlay">
     <svg id="triangleWarn" viewBox="0 0 100 90">
       <polygon points="50,5 95,85 5,85" fill="rgba(255,59,78,0.12)" stroke="#ff3b4e" stroke-width="4"/>
@@ -213,7 +185,6 @@
     <div id="breachStatus">جارِ تفعيل نظام الدفاع...</div>
   </div>
 
-  <!-- شاشة تفعيل الدفاع والعد التنازلي -->
   <div id="defenseOverlay">
     <div id="defenseTitle">تم تفعيل نظام الدفاع</div>
     <div id="countdownNum"></div>
@@ -227,6 +198,8 @@
   <div id="vignette"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -246,31 +219,24 @@ const BOOT_LINES = [
   "جارِ حقن الأوامر...", "جارِ السيطرة على النظام..."
 ];
 const BEST_KEY = "wordSniperBestScore";
+const COLORS = { core:0x3fe8c9, core2:0x7cf9e0, amber:0xffb454, amber2:0xffd28a, danger:0xff3b4e };
 
 /* =========================================================
-   نظام الصوت (يفشل بصمت إن لم تتوفر الملفات)
+   صوت (يفشل بصمت إن لم تتوفر الملفات)
 ========================================================= */
 const Sound = (() => {
-  const files = {
-    boot: "sounds/boot.mp3", alarm: "sounds/alarm.mp3",
-    explosion: "sounds/explosion.mp3", success: "sounds/success.mp3", fail: "sounds/fail.mp3"
-  };
+  const files = { boot:"sounds/boot.mp3", alarm:"sounds/alarm.mp3", explosion:"sounds/explosion.mp3", success:"sounds/success.mp3", fail:"sounds/fail.mp3" };
   const cache = {};
   function play(name){
     try{
       if(!files[name]) return;
       if(!cache[name]){
-        const a = new Audio(files[name]);
-        a.volume = 0.5;
+        const a = new Audio(files[name]); a.volume = 0.5;
         a.onerror = () => { cache[name] = null; };
         cache[name] = a;
       }
-      if(cache[name]){
-        const inst = cache[name].cloneNode();
-        inst.volume = 0.5;
-        inst.play().catch(()=>{});
-      }
-    }catch(e){ /* تجاهل بصمت */ }
+      if(cache[name]){ const inst = cache[name].cloneNode(); inst.volume = 0.5; inst.play().catch(()=>{}); }
+    }catch(e){}
   }
   return { play };
 })();
@@ -281,6 +247,7 @@ const Sound = (() => {
 const stage = document.getElementById('stage');
 const bgCanvas = document.getElementById('bgCanvas');
 const bctx = bgCanvas.getContext('2d');
+const pixiHost = document.getElementById('pixiHost');
 const scoreEl = document.getElementById('score');
 const levelEl = document.getElementById('level');
 const livesEl = document.getElementById('lives');
@@ -294,25 +261,29 @@ const bootScreen = document.getElementById('bootScreen');
 const bootLinesEl = document.getElementById('bootLines');
 const breachOverlay = document.getElementById('breachOverlay');
 const defenseOverlay = document.getElementById('defenseOverlay');
+const defenseTitle = document.getElementById('defenseTitle');
 const countdownNum = document.getElementById('countdownNum');
 const levelUpOverlay = document.getElementById('levelUpOverlay');
+const levelUpTitle = document.getElementById('levelUpTitle');
+const levelUpSub = document.getElementById('levelUpSub');
 const mobileInput = document.getElementById('mobileInput');
 const noiseEl = document.getElementById('noise');
 
 /* =========================================================
-   خلفية المصفوفة المتحركة (Canvas خفيف الأداء)
+   خلفية المصفوفة (Canvas 2D — بقيت كما هي، كفوءة أصلاً)
 ========================================================= */
 const matrixChars = '01アイウエオカキクケコ01ABCDEF#$%&{}[]<>/\\'.split('');
 let mCols = [], stageW = 0, stageH = 0;
 
-function resizeCanvas(){
+function resizeStage(){
   stageW = stage.clientWidth; stageH = stage.clientHeight;
   bgCanvas.width = stageW; bgCanvas.height = stageH;
   const fontSize = 15;
   const cols = Math.ceil(stageW / fontSize);
   mCols = new Array(cols).fill(0).map(()=> Math.random()*-stageH);
+  if(app){ app.renderer.resize(stageW, stageH); }
 }
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', resizeStage);
 
 function drawBg(){
   const fontSize = 15;
@@ -331,11 +302,164 @@ function drawBg(){
 }
 
 /* =========================================================
+   تطبيق PixiJS — الكلمات + الجسيمات + الانفجارات
+========================================================= */
+let app = new PIXI.Application({
+  width: window.innerWidth, height: window.innerHeight,
+  backgroundAlpha: 0, antialias: true, resolution: Math.min(window.devicePixelRatio||1, 2), autoDensity: true
+});
+pixiHost.appendChild(app.view);
+
+const wordLayer = new PIXI.Container();
+const fxLayer = new PIXI.Container();
+app.stage.addChild(wordLayer, fxLayer);
+
+// نسيج جسيم واحد يُنشأ مرة واحدة ويُعاد استخدامه لكل الجسيمات (Texture Caching)
+const particleTexture = (()=>{
+  const g = new PIXI.Graphics();
+  g.beginFill(0xffffff).drawCircle(0,0,7).endFill();
+  const tex = app.renderer.generateTexture(g);
+  g.destroy();
+  return tex;
+})();
+
+/* ---------- كشف أداء الجهاز أول ثلاث ثوانٍ (Adaptive Quality) ---------- */
+let perfSamples = [], perfDecided = false;
+let particlesPerExplosion = 18;
+app.ticker.add((delta)=>{
+  if(perfDecided) return;
+  perfSamples.push(app.ticker.deltaMS);
+  if(perfSamples.length > 90){
+    const avg = perfSamples.reduce((a,b)=>a+b,0)/perfSamples.length;
+    if(avg > 22) particlesPerExplosion = 9; // جهاز أضعف من ~45fps بالمتوسط
+    perfDecided = true;
+  }
+});
+
+/* ---------- تجمّع جسيمات قابل لإعادة الاستخدام (Object Pool) ---------- */
+class ParticlePool{
+  constructor(container, texture, size){
+    this.free = [];
+    for(let i=0;i<size;i++){
+      const s = new PIXI.Sprite(texture);
+      s.anchor.set(0.5); s.visible = false;
+      container.addChild(s);
+      this.free.push(s);
+    }
+  }
+  spawn(){ return this.free.pop() || null; }
+  release(s){ s.visible = false; this.free.push(s); }
+}
+const particlePool = new ParticlePool(fxLayer, particleTexture, 160);
+
+/* ---------- موجة صدمة (Graphics معاد رسمها أثناء التحريك) ---------- */
+function spawnShockwave(x, y){
+  const g = new PIXI.Graphics();
+  fxLayer.addChild(g);
+  const state = { r: 4, alpha: 0.9, width: 2.5 };
+  function redraw(){
+    g.clear();
+    g.lineStyle(state.width, COLORS.amber, state.alpha);
+    g.drawCircle(x, y, state.r);
+  }
+  redraw();
+  gsap.to(state, {
+    r: 68, alpha: 0, width: 0.4, duration: 0.42, ease: "power2.out",
+    onUpdate: redraw,
+    onComplete: ()=> g.destroy()
+  });
+}
+
+/* ---------- انفجار: جسيمات + موجة صدمة + وميض شاشة + اهتزاز HUD ---------- */
+function explode(cx, cy, len){
+  const palette = [COLORS.amber, COLORS.core2, COLORS.core];
+  const count = particlesPerExplosion;
+  for(let i=0;i<count;i++){
+    const s = particlePool.spawn();
+    if(!s) break;
+    s.visible = true; s.alpha = 1;
+    s.x = cx; s.y = cy;
+    s.tint = palette[(Math.random()*palette.length)|0];
+    s.scale.set(0.6 + Math.random()*0.6);
+    const angle = Math.random()*Math.PI*2;
+    const dist = 30 + Math.random()*70;
+    const tx = cx + Math.cos(angle)*dist, ty = cy + Math.sin(angle)*dist;
+    gsap.to(s, {
+      x: tx, y: ty, alpha: 0, duration: 0.4 + Math.random()*0.28,
+      ease: "power3.out",
+      onComplete: ()=> particlePool.release(s)
+    });
+    gsap.to(s.scale, { x: 0.05, y: 0.05, duration: 0.42, ease: "power2.in" });
+  }
+  spawnShockwave(cx, cy);
+  redFlashBrief();
+  Sound.play('explosion');
+}
+
+/* =========================================================
+   الكلمة النازلة — تُرسم بـ PIXI.HTMLText (يحافظ على اتصال الحروف العربية،
+   بعكس تقسيمها إلى نصين منفصلين)
+========================================================= */
+class FallingWord{
+  constructor(text, x){
+    this.text = text;
+    this.typedCount = 0;
+    this.speed = 0; // يُضبط من الخارج حسب المستوى
+
+    this.container = new PIXI.Container();
+    this.container.x = x; this.container.y = -50;
+    this.container.alpha = 0;
+    this.container.scale.set(0.6);
+
+    this.bg = new PIXI.Graphics();
+    this.label = new PIXI.HTMLText('', {
+      fontFamily: "Segoe UI, Tahoma, sans-serif", fontSize: 19, fill: '#dfeef8', align: 'right'
+    });
+    this.label.x = 14; this.label.y = 6;
+
+    this.container.addChild(this.bg, this.label);
+    wordLayer.addChild(this.container);
+    this.render();
+
+    gsap.to(this.container, { alpha: 1, duration: 0.28, ease: "back.out(1.7)" });
+    gsap.to(this.container.scale, { x: 1, y: 1, duration: 0.28, ease: "back.out(1.7)" });
+  }
+  render(){
+    const typed = this.text.slice(0, this.typedCount);
+    const rest = this.text.slice(this.typedCount);
+    this.label.text = `<span style="color:#ffd28a">${typed}</span><span style="color:#dfeef8">${rest}</span>`;
+    // تقدير عرض الخلفية (Pill) بناءً على عدد الأحرف؛ يُصحَّح تلقائياً بعد قياس PIXI الفعلي بالتذبذب القادم
+    const estW = Math.max(60, this.text.length * 15 + 28);
+    this.drawBg(estW);
+  }
+  drawBg(w){
+    this.bg.clear();
+    this.bg.lineStyle(1, this.locked ? COLORS.amber : 0x3fe8c9, this.locked ? 0.5 : 0.22);
+    this.bg.beginFill(0x0e1624, 0.55);
+    this.bg.drawRoundedRect(0, 0, w, 34, 8);
+    this.bg.endFill();
+  }
+  syncBgToMeasuredWidth(){
+    // PIXI.HTMLText يقيس عرضه فعلياً بعد جاهزية النسيج (asynchronous)
+    const measured = this.label.width;
+    if(measured > 10){
+      this.drawBg(measured + 28);
+    }
+  }
+  lock(){ this.locked = true; this.render(); }
+  get y(){ return this.container.y; }
+  set y(v){ this.container.y = v; }
+  destroy(){ this.container.destroy({children:true}); }
+}
+
+/* =========================================================
    حالة اللعبة
 ========================================================= */
 let score=0, lives=3, level=1, wordsDestroyed=0, keysCorrect=0, keysTotal=0;
-let words=[], activeWord=null, running=false, spawnTimer=null;
+let words=[], activeWord=null, running=false;
+let spawnAccum=0, spawnInterval=1600;
 let startTime=0, timeTimer=null;
+const scoreDisplay = { val: 0 }; // للعدّاد المتحرك على HUD
 
 function fmtTime(sec){
   const m = String(Math.floor(sec/60)).padStart(2,'0');
@@ -344,7 +468,8 @@ function fmtTime(sec){
 }
 
 function updateHud(){
-  scoreEl.textContent = score;
+  gsap.to(scoreDisplay, { val: score, duration: 0.35, ease: "power2.out",
+    onUpdate: ()=> scoreEl.textContent = Math.round(scoreDisplay.val) });
   levelEl.textContent = level;
   livesEl.innerHTML = "";
   for(let i=0;i<3;i++){
@@ -363,87 +488,55 @@ function tickTime(){
 }
 
 /* =========================================================
-   تشغيل الكلمات
+   دورة اللعبة الرئيسية (مرتبطة بـ PIXI ticker — deltaTime حقيقي)
 ========================================================= */
-function spawnWord(){
+function gameLoop(delta){
   if(!running) return;
+
+  spawnAccum += app.ticker.deltaMS;
+  if(spawnAccum >= spawnInterval){
+    spawnAccum = 0;
+    spawnWord();
+  }
+
+  for(let i=words.length-1; i>=0; i--){
+    const w = words[i];
+    w.y += w.speed * delta;
+    w.syncBgToMeasuredWidth();
+    if(w.y > stageH - 100){
+      loseLife(w);
+      words.splice(i,1);
+    }
+  }
+}
+
+function spawnWord(){
   const text = WORDS[(Math.random()*WORDS.length)|0];
-  const el = document.createElement('div');
-  el.className = 'word';
-  el.innerHTML = `<span class="typed"></span><span class="rest">${text}</span>`;
-  stage.appendChild(el);
-  const x = Math.random() * (stageW - 150) + 20;
-  el.style.left = x + 'px';
-  el.style.top = '-46px';
-  requestAnimationFrame(()=> el.classList.add('in'));
+  const x = Math.random() * Math.max(stageW - 170, 40) + 20;
   const speed = 0.42 + level*0.11 + Math.random()*0.18;
-  words.push({el, text, typedCount:0, y:-46, speed});
-}
-
-function renderWordProgress(w){
-  w.el.querySelector('.typed').textContent = w.text.slice(0, w.typedCount);
-  w.el.querySelector('.rest').textContent = w.text.slice(w.typedCount);
-}
-
-function explode(w){
-  const cx = parseFloat(w.el.style.left) + w.el.offsetWidth/2;
-  const cy = w.y + w.el.offsetHeight/2;
-  const colors = ['#ffb454','#7cf9e0','#3fe8c9'];
-  for(let i=0;i<14;i++){
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const c = colors[(Math.random()*colors.length)|0];
-    p.style.background = c; p.style.boxShadow = `0 0 8px ${c}`;
-    p.style.left = cx+'px'; p.style.top = cy+'px';
-    stage.appendChild(p);
-    const angle = Math.random()*Math.PI*2, dist = 30+Math.random()*60;
-    const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
-    const anim = p.animate([
-      {transform:'translate(0,0) scale(1)', opacity:1},
-      {transform:`translate(${dx}px,${dy}px) scale(0.15)`, opacity:0}
-    ], {duration:420+Math.random()*220, easing:'cubic-bezier(.2,.8,.3,1)'});
-    anim.onfinish = ()=> p.remove();
-  }
-  const ring = document.createElement('div');
-  ring.className = 'shockwave';
-  ring.style.left = cx+'px'; ring.style.top = cy+'px';
-  ring.style.width='8px'; ring.style.height='8px'; ring.style.marginLeft='-4px'; ring.style.marginTop='-4px';
-  stage.appendChild(ring);
-  const ringAnim = ring.animate([
-    {width:'8px',height:'8px',marginLeft:'-4px',marginTop:'-4px',opacity:.9,borderWidth:'2px'},
-    {width:'110px',height:'110px',marginLeft:'-55px',marginTop:'-55px',opacity:0,borderWidth:'0.5px'}
-  ], {duration:380, easing:'ease-out'});
-  ringAnim.onfinish = ()=> ring.remove();
-
-  w.el.style.transition = 'transform .18s ease-out, opacity .18s ease-out, filter .18s';
-  w.el.style.transform = 'scale(1.7)';
-  w.el.style.opacity = '0';
-  w.el.style.filter = 'brightness(2)';
-  setTimeout(()=> w.el.remove(), 180);
-
-  Sound.play('explosion');
-  score += w.text.length * 10;
-  wordsDestroyed++;
-  updateHud();
-  if(score > level*300){
-    levelUp();
-  }
+  const w = new FallingWord(text, x);
+  w.speed = speed;
+  words.push(w);
 }
 
 function loseLife(w){
-  w.el.remove();
+  w.destroy();
   lives--;
-  screenShake();
+  coreShake();
   redFlashBrief();
   updateHud();
-  if(lives <= 0){
-    endGame(false);
-  }
+  if(lives <= 0) endGame();
 }
 
-function screenShake(){
-  coreEl.classList.add('hit');
-  setTimeout(()=> coreEl.classList.remove('hit'), 260);
+/* ---------- اهتزاز النواة عند فقدان روح — الشدة تزيد كلما قلّت الأرواح ---------- */
+function coreShake(){
+  const intensity = 6 + (3-lives)*3;
+  gsap.killTweensOf(coreEl);
+  const tl = gsap.timeline();
+  tl.to(coreEl, { x: -intensity, duration: 0.05 })
+    .to(coreEl, { x: intensity*0.7, duration: 0.06 })
+    .to(coreEl, { x: -intensity*0.4, duration: 0.06 })
+    .to(coreEl, { x: 0, duration: 0.08 });
 }
 function redFlashBrief(){
   noiseEl.style.background = 'rgba(255,59,78,0.18)';
@@ -451,24 +544,12 @@ function redFlashBrief(){
   setTimeout(()=>{ noiseEl.style.opacity = '0'; }, 130);
 }
 
-function gameLoop(){
-  if(!running) return;
-  words.forEach(w=>{
-    w.y += w.speed;
-    w.el.style.top = w.y+'px';
-    if(w.y > stageH - 100) loseLife(w);
-  });
-  words = words.filter(w => w.y <= stageH - 100);
-  requestAnimationFrame(gameLoop);
-}
-
 /* =========================================================
    الكتابة (كيبورد فعلي + إدخال جوال)
 ========================================================= */
-function handleKey(e){
+function handleKey(key){
   if(!running) return;
-  const key = e.key;
-  if(key.length !== 1 || !/[\u0621-\u064A]/.test(key)) return;
+  if(!/[\u0621-\u064A]/.test(key)) return;
 
   if(activeWord && !words.includes(activeWord)) activeWord = null;
 
@@ -477,11 +558,9 @@ function handleKey(e){
     if(activeWord.text[activeWord.typedCount] === key){
       keysCorrect++;
       activeWord.typedCount++;
-      renderWordProgress(activeWord);
+      activeWord.render();
       if(activeWord.typedCount === activeWord.text.length){
-        explode(activeWord);
-        words = words.filter(w=>w!==activeWord);
-        activeWord = null;
+        finishWord(activeWord);
       }
     }
     updateHud();
@@ -493,61 +572,70 @@ function handleKey(e){
   keysTotal++; keysCorrect++;
   candidates.sort((a,b)=> b.y - a.y);
   activeWord = candidates[0];
-  activeWord.el.classList.add('locked');
+  activeWord.lock();
   activeWord.typedCount = 1;
-  renderWordProgress(activeWord);
+  activeWord.render();
   updateHud();
   if(activeWord.typedCount === activeWord.text.length){
-    explode(activeWord);
-    words = words.filter(w=>w!==activeWord);
-    activeWord = null;
+    finishWord(activeWord);
   }
 }
-window.addEventListener('keydown', handleKey);
 
+function finishWord(w){
+  const cx = w.container.x + (w.label.width||70)/2;
+  const cy = w.y + 17;
+  explode(cx, cy, w.text.length);
+  score += w.text.length * 10;
+  wordsDestroyed++;
+  words = words.filter(x=>x!==w);
+  w.destroy();
+  activeWord = null;
+  updateHud();
+  if(score > level*300) levelUp();
+}
+
+window.addEventListener('keydown', (e)=> handleKey(e.key));
 mobileInput.addEventListener('input', ()=>{
-  const val = mobileInput.value;
-  for(const ch of val) handleKey({key: ch});
+  for(const ch of mobileInput.value) handleKey(ch);
   mobileInput.value = '';
 });
 stage.addEventListener('touchstart', ()=> running && mobileInput.focus());
 stage.addEventListener('click', ()=> running && mobileInput.focus());
 
 /* =========================================================
-   إدارة المراحل (بداية / صعود مستوى / نهاية)
+   إدارة المراحل
 ========================================================= */
 function startGame(){
   score=0; lives=3; level=1; wordsDestroyed=0; keysCorrect=0; keysTotal=0;
-  words.forEach(w=>w.el.remove()); words = [];
+  scoreDisplay.val = 0;
+  words.forEach(w=>w.destroy()); words = [];
   activeWord = null;
+  spawnAccum = 0; spawnInterval = 1600;
   updateHud();
   hud.classList.add('show');
   running = true;
   startTime = Date.now();
   clearInterval(timeTimer); timeTimer = setInterval(tickTime, 500);
-  clearInterval(spawnTimer);
-  spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
-  requestAnimationFrame(gameLoop);
 }
 
 function levelUp(){
   level++;
+  spawnInterval = Math.max(1600 - level*80, 700);
   updateHud();
   running = false;
-  clearInterval(spawnTimer);
   levelUpOverlay.style.display = 'flex';
+  gsap.fromTo(levelUpTitle, {opacity:0, y:14}, {opacity:1, y:0, duration:0.45});
+  gsap.fromTo(levelUpSub, {opacity:0, y:14}, {opacity:1, y:0, duration:0.45, delay:0.1});
   setTimeout(()=>{
     levelUpOverlay.style.display = 'none';
     running = true;
-    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
   }, 1400);
 }
 
-function endGame(won){
+function endGame(){
   running = false;
-  clearInterval(spawnTimer);
   clearInterval(timeTimer);
-  words.forEach(w=>w.el.remove()); words = [];
+  words.forEach(w=>w.destroy()); words = [];
   hud.classList.remove('show');
 
   const elapsed = Math.floor((Date.now()-startTime)/1000);
@@ -555,7 +643,7 @@ function endGame(won){
   const best = Math.max(score, parseInt(localStorage.getItem(BEST_KEY) || '0', 10));
   localStorage.setItem(BEST_KEY, best);
 
-  Sound.play(won ? 'success' : 'fail');
+  Sound.play('fail');
 
   overlay.querySelector('.panel').innerHTML = `
     <h1 class="danger">تم اختراق نظام الدفاع</h1>
@@ -575,20 +663,17 @@ function endGame(won){
 }
 
 /* =========================================================
-   المقدمة السينمائية: الإقلاع -> الاختراق المزيف -> الدفاع -> عد تنازلي
+   المقدمة السينمائية: إقلاع -> اختراق مزيف -> دفاع -> عد تنازلي
 ========================================================= */
-function typeLine(el, text, speed){
+function typeLineGSAP(el, text, duration){
   return new Promise(resolve=>{
-    let i = 0;
+    const state = { n: 0 };
     el.style.opacity = '1';
-    const interval = setInterval(()=>{
-      el.textContent = text.slice(0,i);
-      i++;
-      if(i > text.length){
-        clearInterval(interval);
-        resolve();
-      }
-    }, speed);
+    gsap.to(state, {
+      n: text.length, duration, ease: "none", roundProps: "n",
+      onUpdate: ()=> el.textContent = text.slice(0, state.n),
+      onComplete: resolve
+    });
   });
 }
 
@@ -598,9 +683,9 @@ async function playBootSequence(){
   Sound.play('boot');
   for(const line of BOOT_LINES){
     const div = document.createElement('div');
-    div.className = 'line';
+    div.className = 'line'; div.style.opacity = '0';
     bootLinesEl.appendChild(div);
-    await typeLine(div, line, 26);
+    await typeLineGSAP(div, line, 0.42);
     await new Promise(r=> setTimeout(r, 90));
   }
   await new Promise(r=> setTimeout(r, 250));
@@ -622,12 +707,11 @@ async function playBreachSequence(){
 async function playDefenseSequence(){
   defenseOverlay.style.display = 'flex';
   countdownNum.textContent = '';
+  gsap.fromTo(defenseTitle, {opacity:0, y:14}, {opacity:1, y:0, duration:0.5});
   await new Promise(r=> setTimeout(r, 900));
   for(const n of ['٣','٢','١']){
     countdownNum.textContent = n;
-    countdownNum.style.animation = 'none';
-    void countdownNum.offsetWidth;
-    countdownNum.style.animation = 'fadeUp .4s ease';
+    gsap.fromTo(countdownNum, {scale:0.3, opacity:0}, {scale:1, opacity:1, duration:0.4, ease:"elastic.out(1,0.5)"});
     await new Promise(r=> setTimeout(r, 650));
   }
   defenseOverlay.style.display = 'none';
@@ -635,7 +719,7 @@ async function playDefenseSequence(){
 
 async function beginSequence(){
   overlay.style.display = 'none';
-  resizeCanvas();
+  resizeStage();
   await playBootSequence();
   await playBreachSequence();
   await playDefenseSequence();
@@ -646,20 +730,11 @@ async function beginSequence(){
 startBtn.addEventListener('click', beginSequence);
 
 /* =========================================================
-   إعادة ضبط سرعة التوليد عند تغيّر المستوى
+   تشغيل
 ========================================================= */
-setInterval(()=>{
-  if(running){
-    clearInterval(spawnTimer);
-    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
-  }
-}, 3000);
-
-/* =========================================================
-   تشغيل الخلفية المتحركة دائمًا
-========================================================= */
-resizeCanvas();
+resizeStage();
 requestAnimationFrame(drawBg);
+app.ticker.add(gameLoop);
 
 })();
 </script>
