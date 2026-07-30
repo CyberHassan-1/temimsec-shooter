@@ -14,86 +14,72 @@
     --text:#dfeef8; --dim:#5d7488; --dim2:#2c3849;
     --glass: rgba(14,22,36,0.55);
     --glass-border: rgba(124,249,224,0.18);
-    /* professional motion curves — no linear easing anywhere */
-    --ease: cubic-bezier(.22,.9,.32,1);       /* soft settle */
-    --ease-snap: cubic-bezier(.16,1,.3,1);    /* fast out, gentle settle */
-    --ease-punch: cubic-bezier(.34,1.56,.64,1); /* slight overshoot, weight */
-    --ease-in: cubic-bezier(.55,0,.85,.25);
+    --ease: cubic-bezier(.22,.9,.32,1);
+    --ease-in: cubic-bezier(.5,0,.75,0);
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html,body{width:100%; height:100%; overflow:hidden; background:var(--void); font-family:'Segoe UI',Tahoma,sans-serif; color:var(--text); user-select:none;}
 
-  #stage{position:relative; width:100%; height:100vh; overflow:hidden; will-change:transform;
-    background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%);}
+  #stage{position:relative; width:100%; height:100vh; overflow:hidden;
+    background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%); }
 
-  #bgCanvas,#fxCanvas{position:absolute; inset:0;}
-  #bgCanvas{z-index:0;}
-  #fxCanvas{z-index:6; pointer-events:none;}
+  #bgCanvas{position:absolute; inset:0; z-index:0;}
   #gridOverlay{position:absolute; inset:0; z-index:1; pointer-events:none;
     background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size:42px 42px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 85%);
-    animation: gridBreathe 6s ease-in-out infinite;}
-  @keyframes gridBreathe{ 0%,100%{opacity:.7;} 50%{opacity:1;} }
+    background-size:42px 42px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 85%);}
 
-  #scanlines{position:absolute; inset:0; z-index:70; pointer-events:none; opacity:0.06;
+  #scanlines{position:absolute; inset:0; z-index:70; pointer-events:none; opacity:0.07;
     background: repeating-linear-gradient(0deg, #000 0px, transparent 1px, transparent 2px, #000 3px);
     mix-blend-mode:overlay;}
   #vignette{position:absolute; inset:0; z-index:69; pointer-events:none;
-    box-shadow: inset 0 0 160px 40px rgba(0,0,0,0.75); transition: box-shadow .4s var(--ease);}
-  #flashFx{position:absolute; inset:0; z-index:68; pointer-events:none; opacity:0;
-    background:rgba(255,59,78,0.18); transition:opacity .18s var(--ease);}
+    box-shadow: inset 0 0 160px 40px rgba(0,0,0,0.75);}
+  #noise{position:absolute; inset:0; z-index:68; pointer-events:none; opacity:0;
+    transition:opacity .18s var(--ease); background:rgba(255,59,78,0.18);}
 
   /* ===== HUD ===== */
   #hud{position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start;
     padding:16px 20px; z-index:10; pointer-events:none; opacity:0; transition:opacity .6s var(--ease);}
   #hud.show{opacity:1;}
-  #hud.shake{ animation: hudShake .32s var(--ease-punch); }
-  @keyframes hudShake{ 0%{transform:translate(0,0);} 25%{transform:translate(-4px,2px);} 55%{transform:translate(3px,-2px);} 100%{transform:translate(0,0);} }
   .glass{ background:var(--glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    border:1px solid var(--glass-border); border-radius:12px;}
-  body.perf-low .glass{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,18,30,0.92);}
-  .hud-block{ padding:8px 16px; text-align:center; min-width:74px; transition: transform .18s var(--ease-punch);}
-  .hud-block.pulse{ transform:scale(1.14); }
-  .hud-label{ font-size:9px; letter-spacing:2px; color:var(--dim);}
-  .hud-value{ font-size:22px; font-weight:700; color:var(--core2); text-shadow:0 0 10px rgba(63,232,201,.5);}
+    border:1px solid var(--glass-border); border-radius:12px; }
+  body.perf-low .glass{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,18,30,0.86);}
+  .hud-block{ padding:8px 16px; text-align:center; min-width:74px; }
+  .hud-label{ font-size:9px; letter-spacing:2px; color:var(--dim); }
+  .hud-value{ font-size:22px; font-weight:700; color:var(--core2); text-shadow:0 0 10px rgba(63,232,201,.5); }
   #lives{ display:flex; gap:5px; font-size:16px; justify-content:center; margin-top:2px;}
-  .life-dot{ width:11px; height:11px; border-radius:50%; background:var(--core); box-shadow:0 0 8px var(--core); transition:all .35s var(--ease-punch);}
-  .life-dot.lost{ background:transparent; border:1px solid var(--dim2); box-shadow:none; transform:scale(0.7) rotate(90deg);}
+  .life-dot{ width:11px; height:11px; border-radius:50%; background:var(--core); box-shadow:0 0 8px var(--core); transition:all .3s var(--ease);}
+  .life-dot.lost{ background:transparent; border:1px solid var(--dim2); box-shadow:none; transform:scale(0.8);}
+
   #hudRight{ display:flex; flex-direction:column; gap:6px; align-items:flex-end;}
   #hudRight .glass{ padding:5px 12px; font-size:10px; color:var(--dim); letter-spacing:1px;}
   #hudRight b{ color:var(--amber2); font-weight:700;}
-  #comboWrap{ position:absolute; top:78px; left:50%; transform:translateX(-50%); z-index:10; pointer-events:none;
-    font-size:13px; letter-spacing:3px; color:var(--amber2); opacity:0; text-shadow:0 0 12px rgba(255,180,84,.7);
-    transition:opacity .25s var(--ease), transform .25s var(--ease-punch);}
-  #comboWrap.show{ opacity:1; transform:translateX(-50%) scale(1.08);}
 
   #core{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); width:130px; height:66px; z-index:5;}
-  #core svg{ width:100%; height:100%; filter:drop-shadow(0 0 16px rgba(63,232,201,.6)); transition:filter .3s var(--ease);}
-  #core.hit{ animation: coreHit .34s var(--ease-punch);}
-  #core.hit svg{ filter:drop-shadow(0 0 20px rgba(255,59,78,.95));}
-  @keyframes coreHit{ 0%,100%{ transform:translateX(-50%) scale(1);} 40%{ transform:translateX(-50%) scale(0.86) rotate(-2deg);} 70%{transform:translateX(-50%) scale(1.05) rotate(1deg);} }
-  #coreRing{ position:absolute; left:50%; bottom:0; width:10px; height:10px; margin-left:-5px; border-radius:50%;
-    border:1.5px solid var(--core); opacity:0; pointer-events:none;}
+  #core svg{ width:100%; height:100%; filter:drop-shadow(0 0 16px rgba(63,232,201,.6)); transition:filter .25s var(--ease);}
+  #core.hit svg{ filter:drop-shadow(0 0 18px rgba(255,59,78,.9)); }
+  #core.hit{ animation: coreHit .3s var(--ease); }
+  @keyframes coreHit{ 0%,100%{ transform:translateX(-50%) scale(1);} 45%{ transform:translateX(-50%) scale(0.9);} }
 
   .word{ position:absolute; top:-46px; font-size:19px; white-space:nowrap; padding:6px 14px; border-radius:8px;
     background:var(--glass); border:1px solid var(--core-dim); letter-spacing:1px; z-index:4;
     box-shadow:0 0 14px rgba(63,232,201,.12);
-    opacity:0; transform:scale(0.5); transition:opacity .3s var(--ease-snap), transform .3s var(--ease-snap), box-shadow .2s var(--ease);
-    will-change:transform,top;}
-  body:not(.perf-low) .word{ backdrop-filter:blur(4px);}
-  .word.in{ opacity:1; transform:scale(1);}
+    opacity:0; transform:scale(0.5); transition:opacity .32s var(--ease), transform .32s var(--ease); }
+  body:not(.perf-low) .word{ backdrop-filter:blur(4px); }
+  .word.in{ opacity:1; transform:scale(1); }
   .word .typed{ color:var(--amber2); text-shadow:0 0 8px rgba(255,180,84,.8);}
-  .word .rest{ color:var(--text);}
-  .word.locked{ border-color:var(--amber); box-shadow:0 0 20px rgba(255,180,84,.5);}
-  .word.pop{ transform:scale(1.85) !important; opacity:0 !important; filter:brightness(2.2); transition:transform .2s var(--ease-in), opacity .2s var(--ease-in), filter .2s;}
+  .word .rest{ color:var(--text); }
+  .word.locked{ border-color:var(--amber); box-shadow:0 0 18px rgba(255,180,84,.4); }
 
-  /* ===== شاشة الأسطر النصية ===== */
-  #bootScreen{ position:absolute; inset:0; z-index:50; display:none; align-items:flex-start; justify-content:flex-start;
-    padding:10vh 6vw; opacity:0; transition:opacity .6s var(--ease);}
-  #bootScreen.show{ opacity:1;}
-  #bootLines{ font-family:'Courier New',monospace; font-size:16px; line-height:2.1; color:#39ff9e; text-shadow:0 0 8px rgba(57,255,158,.65);}
+  .particle{ position:absolute; width:5px; height:5px; border-radius:50%; z-index:6; pointer-events:none;}
+  .shockwave{ position:absolute; border-radius:50%; border:2px solid var(--amber); z-index:6; pointer-events:none;}
+
+  /* ===== شاشة الإقلاع النصية ===== */
+  #bootScreen{ position:absolute; inset:0; z-index:50; background:transparent; display:none;
+    font-family:'Courier New',monospace; padding:8vh 6vw; opacity:0; transition:opacity .6s var(--ease);}
+  #bootScreen.show{ opacity:1; }
+  #bootLines{ font-size:15px; line-height:2.1; color:#39ff9e; text-shadow:0 0 8px rgba(57,255,158,.65);}
   #bootLines .line{ opacity:0; transition:opacity .2s;}
-  #bootScreen.glitch{ animation: hardGlitch .5s steps(2) 3;}
+  #bootScreen.glitch{ animation: hardGlitch .5s steps(2) 3; }
   @keyframes hardGlitch{
     0%{ transform:translate(0,0); filter:none;}
     20%{ transform:translate(-6px,3px); filter:hue-rotate(40deg) saturate(3);}
@@ -103,49 +89,49 @@
     100%{ transform:translate(0,0); filter:none;}
   }
 
-  /* ===== شاشة "تم اختراق جهازك" — مكثّفة ===== */
+  /* ===== شاشة الاختراق المزيف ===== */
   #breachOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
-    flex-direction:column; background:rgba(20,0,2,0.3); opacity:0; transition:opacity .55s var(--ease);}
-  #breachOverlay.show{ opacity:1;}
-  #breachOverlay.flash{ animation: redFlash .5s ease-in-out infinite;}
-  @keyframes redFlash{ 0%,100%{ background:rgba(20,0,2,0.3);} 50%{ background:rgba(130,0,10,0.55);} }
-  #breachGlitchCanvas{ position:absolute; inset:0; mix-blend-mode:screen; opacity:0; pointer-events:none;}
-  #breachGlitchCanvas.on{ opacity:1;}
+    flex-direction:column; background:rgba(20,0,2,0.3); opacity:0; transition:opacity .7s var(--ease), background .4s;}
+  #breachOverlay.show{ opacity:1; }
+  #breachOverlay.flash{ animation: redFlash .55s ease-in-out infinite; }
+  @keyframes redFlash{ 0%,100%{ background:rgba(20,0,2,0.3);} 50%{ background:rgba(120,0,10,0.5);} }
+
   #triangleWarn{ width:126px; height:118px; margin-bottom:20px;
     filter:drop-shadow(0 0 22px rgba(255,59,78,.85)) drop-shadow(0 0 44px rgba(255,59,78,.35));
-    transform:scale(2.4); opacity:0; transition:transform .5s var(--ease-punch), opacity .5s var(--ease);}
-  #triangleWarn.enter{ transform:scale(1); opacity:1;}
-  #triangleWarn.idle{ animation: warnPulse 1s ease-in-out infinite;}
-  @keyframes warnPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.07);} }
+    transform:scale(2.4); opacity:0; transition:transform .5s var(--ease), opacity .5s var(--ease); }
+  #triangleWarn.enter{ transform:scale(1); opacity:1; }
+  #triangleWarn.idle{ animation: warnPulse 1.1s ease-in-out infinite; }
+  @keyframes warnPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.05);} }
+
   #breachTitle{ font-size:44px; font-weight:900; color:var(--danger); letter-spacing:3px; text-align:center;
     text-shadow:0 0 18px var(--danger), 0 0 40px rgba(255,59,78,.6);
-    transform:scale(3); opacity:0; transition:transform .4s var(--ease-punch), opacity .4s var(--ease);}
-  #breachTitle.enter{ transform:scale(1); opacity:1;}
-  #breachTitle.idle{ animation: breachShake .11s linear infinite, breachGlow 1s ease-in-out infinite; }
-  #breachTitle.exit{ opacity:0; transform:scale(0.94); transition:opacity .7s var(--ease), transform .7s var(--ease); animation:none;}
-  @keyframes breachShake{ 0%{transform:translate(0,0) skewX(0);} 25%{transform:translate(-3px,2px) skewX(1deg);} 50%{transform:translate(3px,-2px) skewX(-1deg);} 75%{transform:translate(-2px,-2px);} 100%{transform:translate(0,0);} }
-  @keyframes breachGlow{ 0%,100%{ opacity:1;} 50%{ opacity:.68;} }
-  #breachSub, #breachStatus{ opacity:0; transition:opacity .6s var(--ease) .15s;}
-  #breachSub.show, #breachStatus.show{ opacity:1;}
-  #breachSub{ margin-top:14px; font-size:14px; color:var(--danger2); letter-spacing:2px;}
-  #breachStatus{ margin-top:26px; font-size:13px; color:var(--dim); letter-spacing:1px; font-variant-numeric:tabular-nums;}
+    transform:scale(3); opacity:0; transition:transform .38s var(--ease), opacity .38s var(--ease); }
+  #breachTitle.enter{ transform:scale(1); opacity:1; }
+  #breachTitle.idle{ animation: breachShake .13s linear infinite, breachGlow 1.1s ease-in-out infinite; }
+  #breachTitle.exit{ opacity:0; transform:scale(0.94); transition:opacity .7s var(--ease), transform .7s var(--ease); animation:none; }
+  @keyframes breachShake{ 0%{transform:translate(0,0);} 25%{transform:translate(-3px,2px);} 50%{transform:translate(3px,-2px);} 75%{transform:translate(-2px,-2px);} 100%{transform:translate(0,0);} }
+  @keyframes breachGlow{ 0%,100%{ opacity:1;} 50%{ opacity:.72;} }
 
-  /* ===== تفعيل الدفاع والعد التنازلي ===== */
+  #breachSub, #breachStatus{ opacity:0; transition:opacity .6s var(--ease) .15s; }
+  #breachSub.show, #breachStatus.show{ opacity:1; }
+  #breachSub{ margin-top:14px; font-size:14px; color:var(--danger2); letter-spacing:2px; }
+  #breachStatus{ margin-top:26px; font-size:13px; color:var(--dim); letter-spacing:1px; }
+
+  /* ===== تفعيل الدفاع + العد التنازلي ===== */
   #defenseOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
     flex-direction:column; background:rgba(0,10,8,0.42); opacity:0; transition:opacity .6s var(--ease);}
-  #defenseOverlay.show{ opacity:1;}
+  #defenseOverlay.show{ opacity:1; }
   #defenseTitle{ font-size:30px; font-weight:800; color:var(--core2); letter-spacing:2px; text-align:center;
     text-shadow:0 0 20px rgba(63,232,201,.7); opacity:0; transform:translateY(16px); transition:opacity .5s var(--ease), transform .5s var(--ease);}
-  #defenseTitle.show{ opacity:1; transform:translateY(0);}
+  #defenseTitle.show{ opacity:1; transform:translateY(0); }
   #countdownNum{ font-size:92px; font-weight:900; color:var(--amber2); margin-top:22px;
-    text-shadow:0 0 30px rgba(255,180,84,.7); opacity:0; transform:scale(0.55); transition:opacity .3s var(--ease-punch), transform .3s var(--ease-punch);}
-  #countdownNum.show{ opacity:1; transform:scale(1);}
+    text-shadow:0 0 30px rgba(255,180,84,.7); opacity:0; transform:scale(0.6); transition:opacity .35s var(--ease), transform .35s var(--ease);}
+  #countdownNum.show{ opacity:1; transform:scale(1); }
 
-  /* ===== شاشات البداية/النهاية ===== */
+  /* ===== شاشات البداية / النهاية ===== */
   #overlay{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
     background:rgba(5,7,13,0.86); z-index:20; text-align:center; padding:20px;}
-  #overlay .panel{ padding:34px 36px; max-width:400px; animation: panelIn .5s var(--ease-snap);}
-  @keyframes panelIn{ from{opacity:0; transform:translateY(14px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+  #overlay .panel{ padding:34px 36px; max-width:400px;}
   #overlay h1{ font-size:34px; color:var(--core2); letter-spacing:2px; text-shadow:0 0 20px rgba(63,232,201,.5); margin-bottom:12px;}
   #overlay h1.danger{ color:var(--danger); text-shadow:0 0 20px rgba(255,59,78,.6);}
   #overlay p{ color:var(--dim); font-size:13.5px; margin-bottom:20px; line-height:1.9;}
@@ -155,59 +141,67 @@
   #statsGrid .box .val{ font-size:19px; color:var(--core2); font-weight:700; margin-top:2px;}
   button{ background:linear-gradient(180deg, rgba(63,232,201,0.16), rgba(63,232,201,0.04));
     border:1px solid var(--core); color:var(--core2); font-size:14.5px; letter-spacing:1px;
-    padding:13px 30px; border-radius:8px; cursor:pointer; transition:all .22s var(--ease-punch); min-height:44px;}
-  button:hover{ background:rgba(63,232,201,0.26); box-shadow:0 0 18px rgba(63,232,201,.4); transform:translateY(-1px);}
-  button:active{ transform:scale(0.96);}
+    padding:13px 30px; border-radius:8px; cursor:pointer; transition:all .25s var(--ease); min-height:44px;}
+  button:hover{ background:rgba(63,232,201,0.26); box-shadow:0 0 18px rgba(63,232,201,.4);}
+  button:active{ transform:scale(0.97); }
 
   #levelUpOverlay{ position:absolute; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
     flex-direction:column; background:rgba(6,10,8,0.55); opacity:0; transition:opacity .5s var(--ease);}
-  #levelUpOverlay.show{ opacity:1;}
+  #levelUpOverlay.show{ opacity:1; }
   #levelUpTitle{ font-size:32px; color:var(--amber2); font-weight:800; letter-spacing:2px; text-shadow:0 0 20px rgba(255,180,84,.6);
-    opacity:0; transform:translateY(14px) scale(.9); transition:opacity .5s var(--ease-punch), transform .5s var(--ease-punch);}
+    opacity:0; transform:translateY(14px); transition:opacity .5s var(--ease), transform .5s var(--ease);}
   #levelUpSub{ margin-top:10px; font-size:13px; color:var(--dim); opacity:0; transform:translateY(14px); transition:opacity .5s var(--ease) .12s, transform .5s var(--ease) .12s;}
-  #levelUpOverlay.show #levelUpTitle, #levelUpOverlay.show #levelUpSub{ opacity:1; transform:translateY(0) scale(1);}
+  #levelUpOverlay.show #levelUpTitle, #levelUpOverlay.show #levelUpSub{ opacity:1; transform:translateY(0); }
 
   #tapHint{ position:absolute; bottom:96px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--dim); z-index:6; display:none;}
   #mobileInput{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;}
 
   @media (max-width:640px){
-    .hud-block{ padding:6px 10px; min-width:56px;} .hud-value{ font-size:17px;} .hud-label{ font-size:7.5px;}
-    #core{ width:88px; height:44px;} .word{ font-size:15px; padding:4px 9px;}
+    .hud-block{ padding:6px 10px; min-width:56px;}
+    .hud-value{ font-size:17px;} .hud-label{ font-size:7.5px;}
+    #core{ width:88px; height:44px;}
+    .word{ font-size:15px; padding:4px 9px;}
     #overlay h1{ font-size:24px;} #overlay .panel{ padding:26px 22px;}
     #breachTitle{ font-size:27px;} #triangleWarn{ width:96px; height:90px;}
     #defenseTitle{ font-size:21px;} #countdownNum{ font-size:62px;}
-    button{ font-size:13px; padding:12px 24px;} #tapHint{ display:block;}
-    #bootLines{ font-size:12.5px;}
-    #comboWrap{ font-size:11px; top:70px;}
+    button{ font-size:13px; padding:12px 24px;}
+    #tapHint{ display:block;}
+    #bootLines{ font-size:12px;}
   }
-  @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  @media (min-width:1100px){
+    #overlay .panel{ max-width:460px; }
   }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="bgCanvas"></canvas>
-  <canvas id="fxCanvas"></canvas>
   <div id="gridOverlay"></div>
 
   <div id="hud">
-    <div class="glass hud-block" id="scoreBlock"><div class="hud-label">النقاط</div><div class="hud-value" id="score">0</div></div>
-    <div class="glass hud-block"><div class="hud-label">الأرواح</div><div id="lives"></div></div>
-    <div class="glass hud-block" id="levelBlock"><div class="hud-label">المستوى</div><div class="hud-value" id="level">1</div></div>
+    <div class="glass hud-block">
+      <div class="hud-label">النقاط</div>
+      <div class="hud-value" id="score">0</div>
+    </div>
+    <div class="glass hud-block">
+      <div class="hud-label">الأرواح</div>
+      <div id="lives"></div>
+    </div>
+    <div class="glass hud-block">
+      <div class="hud-label">المستوى</div>
+      <div class="hud-value" id="level">1</div>
+    </div>
     <div id="hudRight">
       <div class="glass">الدقة: <b id="accuracyStat">100%</b></div>
       <div class="glass">الزمن: <b id="timeStat">00:00</b></div>
     </div>
   </div>
-  <div id="comboWrap"></div>
 
   <div id="core">
     <svg viewBox="0 0 120 60">
       <polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="2.5"/>
       <circle cx="60" cy="40" r="8" fill="#3fe8c9" opacity="0.85"/>
     </svg>
-    <div id="coreRing"></div>
   </div>
 
   <div id="overlay">
@@ -223,10 +217,11 @@
     <div id="levelUpSub">الانتقال إلى المرحلة التالية...</div>
   </div>
 
-  <div id="bootScreen"><div id="bootLines"></div></div>
+  <div id="bootScreen">
+    <div id="bootLines"></div>
+  </div>
 
   <div id="breachOverlay">
-    <canvas id="breachGlitchCanvas"></canvas>
     <svg id="triangleWarn" viewBox="0 0 100 96">
       <defs>
         <filter id="skullGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -243,7 +238,8 @@
         <path d="M-2.5 4 L0 9 L2.5 4 Z" fill="#1a0002"/>
         <path d="M-9 15 h4 M-3 15 h4 M3 15 h4" stroke="#1a0002" stroke-width="1.6"/>
         <g stroke="#ff3b4e" stroke-width="3.4" stroke-linecap="round">
-          <path d="M-24 30 L24 46"/><path d="M24 30 L-24 46"/>
+          <path d="M-24 30 L24 46"/>
+          <path d="M24 30 L-24 46"/>
         </g>
       </g>
     </svg>
@@ -260,7 +256,7 @@
   <div id="tapHint">اضغط بأي مكان لتظهر لوحة المفاتيح</div>
   <input id="mobileInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
-  <div id="flashFx"></div>
+  <div id="noise"></div>
   <div id="scanlines"></div>
   <div id="vignette"></div>
 </div>
@@ -269,324 +265,281 @@
 (function(){
 "use strict";
 
-/* ============ كشف الأداء وتخفيف المؤثرات تلقائياً ============ */
+/* =========================================================
+   كشف أداء الجهاز — يُخفَّف المؤثرات تلقائياً على الأجهزة الضعيفة
+========================================================= */
 const PERF = (() => {
   const cores = navigator.hardwareConcurrency || 4;
   const mem = navigator.deviceMemory || 4;
   const small = Math.min(window.innerWidth, window.innerHeight) < 420;
   const low = cores <= 4 || mem <= 3 || small;
-  return { mode: low ? 'low':'high', particleMult: low?0.5:1, rainDensity: low?0.55:1, fontStep: low?20:15, dpr: Math.min(window.devicePixelRatio||1, low?1.5:2) };
+  return {
+    mode: low ? 'low' : 'high',
+    particleMult: low ? 0.5 : 1,
+    rainDensity: low ? 0.55 : 1,
+    fontStep: low ? 20 : 15
+  };
 })();
 if(PERF.mode === 'low') document.body.classList.add('perf-low');
-let frameSamples=[], lastFrameT=performance.now();
+
+/* يراقب الأداء الفعلي أثناء اللعب ويخفف المؤثرات إذا هبطت الإطارات */
+let frameSamples = [], lastFrameT = performance.now();
 function monitorFrame(){
-  const now=performance.now(); const dt=now-lastFrameT; lastFrameT=now;
-  frameSamples.push(dt); if(frameSamples.length>40) frameSamples.shift();
-  if(frameSamples.length===40 && PERF.mode==='high'){
-    const avg=frameSamples.reduce((a,b)=>a+b,0)/40;
-    if(avg>26){ PERF.mode='low'; PERF.particleMult=0.5; PERF.rainDensity=0.55; document.body.classList.add('perf-low'); }
+  const now = performance.now();
+  const dt = now - lastFrameT;
+  lastFrameT = now;
+  frameSamples.push(dt);
+  if(frameSamples.length > 40) frameSamples.shift();
+  if(frameSamples.length === 40 && PERF.mode === 'high'){
+    const avg = frameSamples.reduce((a,b)=>a+b,0)/40;
+    if(avg > 26){ // أقل من ~38fps بثبات
+      PERF.mode = 'low'; PERF.particleMult = 0.5; PERF.rainDensity = 0.55;
+      document.body.classList.add('perf-low');
+    }
   }
 }
 
-/* ============ منحنيات حركة احترافية (بدون أي Linear) ============ */
-const Ease = {
-  outCubic: t => 1-Math.pow(1-t,3),
-  outQuint: t => 1-Math.pow(1-t,5),
-  outBack: t => { const c1=1.70158,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); },
-  outElastic: t => { const c4=(2*Math.PI)/3; return t===0?0:t===1?1:Math.pow(2,-10*t)*Math.sin((t*10-0.75)*c4)+1; },
-  inOutSine: t => -(Math.cos(Math.PI*t)-1)/2
-};
-
-/* ============ صوت (يفشل بصمت بلا ملفات) ============ */
-const Sound = (()=>{
-  const files={boot:"sounds/boot.mp3",alarm:"sounds/alarm.mp3",explosion:"sounds/explosion.mp3",success:"sounds/success.mp3",fail:"sounds/fail.mp3"};
-  const cache={};
+/* =========================================================
+   الصوت
+========================================================= */
+const Sound = (() => {
+  const files = { boot:"sounds/boot.mp3", alarm:"sounds/alarm.mp3", explosion:"sounds/explosion.mp3", success:"sounds/success.mp3", fail:"sounds/fail.mp3" };
+  const cache = {};
   function play(name){
     try{
       if(!files[name]) return;
-      if(cache[name]===undefined){ const a=new Audio(files[name]); a.onerror=()=>{cache[name]=null;}; cache[name]=a; }
-      if(cache[name]){ const inst=cache[name].cloneNode(); inst.volume=0.5; inst.play().catch(()=>{}); }
+      if(cache[name] === undefined){
+        const a = new Audio(files[name]);
+        a.onerror = () => { cache[name] = null; };
+        cache[name] = a;
+      }
+      if(cache[name]){ const inst = cache[name].cloneNode(); inst.volume = 0.5; inst.play().catch(()=>{}); }
     }catch(e){}
   }
-  return {play};
+  return { play };
 })();
 
-/* ============ عناصر DOM ============ */
+/* =========================================================
+   عناصر DOM
+========================================================= */
 const stage=document.getElementById('stage'), bgCanvas=document.getElementById('bgCanvas'), bctx=bgCanvas.getContext('2d');
-const fxCanvas=document.getElementById('fxCanvas'), fctx=fxCanvas.getContext('2d');
 const scoreEl=document.getElementById('score'), levelEl=document.getElementById('level'), livesEl=document.getElementById('lives');
-const scoreBlock=document.getElementById('scoreBlock'), levelBlock=document.getElementById('levelBlock');
 const accuracyEl=document.getElementById('accuracyStat'), timeEl=document.getElementById('timeStat'), hud=document.getElementById('hud');
 const overlay=document.getElementById('overlay'), startBtn=document.getElementById('startBtn'), coreEl=document.getElementById('core');
-const coreRing=document.getElementById('coreRing'), comboWrap=document.getElementById('comboWrap');
 const bootScreen=document.getElementById('bootScreen'), bootLinesEl=document.getElementById('bootLines');
 const breachOverlay=document.getElementById('breachOverlay'), triangleWarn=document.getElementById('triangleWarn');
 const breachTitle=document.getElementById('breachTitle'), breachSub=document.getElementById('breachSub'), breachStatus=document.getElementById('breachStatus');
-const breachGlitchCanvas=document.getElementById('breachGlitchCanvas'), gctx=breachGlitchCanvas.getContext('2d');
 const defenseOverlay=document.getElementById('defenseOverlay'), defenseTitle=document.getElementById('defenseTitle'), countdownNum=document.getElementById('countdownNum');
-const levelUpOverlay=document.getElementById('levelUpOverlay'), mobileInput=document.getElementById('mobileInput'), flashFx=document.getElementById('flashFx');
+const levelUpOverlay=document.getElementById('levelUpOverlay'), mobileInput=document.getElementById('mobileInput'), noiseEl=document.getElementById('noise');
 
-/* ============ بيانات ============ */
-const WORDS=["برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
-"دفاع","كود","ذاكرة","معالج","بروتوكول","منفذ","جدار","تحليل","تسجيل","دخول",
-"كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
-"خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"];
+/* =========================================================
+   الكلمات
+========================================================= */
+const WORDS = [
+  "برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
+  "دفاع","كود","ذاكرة","معالج","بروتوكول","منفذ","جدار","تحليل","تسجيل","دخول",
+  "كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
+  "خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"
+];
+const BOOT_LINES = [
+  "جارِ الاتصال...", "جارِ فحص النظام...", "جارِ تحليل الملفات...",
+  "جارِ تجاوز الحماية...", "جارِ تحليل الذاكرة...", "تم العثور على ثغرة...",
+  "جارِ حقن الأوامر...", "جارِ السيطرة على النظام..."
+];
+const RAIN_GLYPHS = "01アイウエオカキクケコサシスセソ01ABCDEF#$%&{}[]<>/\\؀؁ء أ ب ت ث ج ح خ".split('');
+const BEST_KEY = "wordSniperBestScore";
 
-const BOOT_LINES=["تهيئة النظام الأمني...","فحص طبقات الحماية...","رصد نشاط غير معروف...",
-"تحليل حزم البيانات...","تعقّب مصدر الاختراق...","تم رصد كيان دخيل..."];
+/* =========================================================
+   خلفية Canvas: مطر رمزي (شاشة إقلاع) وخلفية شبكية هادئة (أثناء اللعب)
+========================================================= */
+let stageW=0, stageH=0, rainCols=[];
+let canvasMode = 'idle'; // 'rain' | 'ambient' | 'idle'
 
-const RAIN_GLYPHS="01アイウエオカキクケコサシスセソ01ABCDEF#$%&{}[]<>/\\ ب ت ث ج ح خ د ذ".split('');
-const BEST_KEY="wordSniperBestScore";
-
-/* ============ خلفية الـ Canvas (طبقتان لعمق Parallax) ============ */
-let stageW=0, stageH=0, rainCols=[], rainColsFar=[];
-let canvasMode='rain';
-
-function sizeCanvasHD(cnv,ctx){
-  cnv.width = Math.round(stageW*PERF.dpr); cnv.height = Math.round(stageH*PERF.dpr);
-  cnv.style.width = stageW+'px'; cnv.style.height = stageH+'px';
-  ctx.setTransform(PERF.dpr,0,0,PERF.dpr,0,0);
-}
 function resizeCanvas(){
-  stageW=stage.clientWidth; stageH=stage.clientHeight;
-  sizeCanvasHD(bgCanvas,bctx); sizeCanvasHD(fxCanvas,fctx); sizeCanvasHD(breachGlitchCanvas,gctx);
+  stageW = stage.clientWidth; stageH = stage.clientHeight;
+  bgCanvas.width = stageW; bgCanvas.height = stageH;
   buildRainColumns();
 }
 window.addEventListener('resize', resizeCanvas);
 
 function buildRainColumns(){
-  const step=PERF.fontStep;
-  const count=Math.max(20, Math.ceil((stageW/step)*PERF.rainDensity));
-  const make=(speedMul)=>new Array(count).fill(0).map(()=>({
-    x:Math.random()*stageW, y:stageH+Math.random()*stageH,
-    speed:(1.1+Math.random()*1.6)*speedMul, size:12+Math.random()*10, alpha:0.15+Math.random()*0.55,
-    glyph:RAIN_GLYPHS[(Math.random()*RAIN_GLYPHS.length)|0], changeEvery:4+((Math.random()*8)|0), tick:0
-  }));
-  rainCols=make(1); rainColsFar=make(0.45);
-}
-function drawRain(dt){
-  const k=dt/16.67;
-  bctx.fillStyle='rgba(2,4,9,0.22)'; bctx.fillRect(0,0,stageW,stageH);
-  rainColsFar.forEach(c=>{
-    bctx.font=(c.size*0.8)+'px monospace'; bctx.fillStyle=`rgba(45,120,150,${c.alpha*0.4})`;
-    bctx.fillText(c.glyph, c.x, c.y); c.y-=c.speed*k; if(c.y<-20){ c.y=stageH+Math.random()*60; }
+  const step = PERF.fontStep;
+  const count = Math.ceil((stageW/step) * PERF.rainDensity);
+  rainCols = new Array(count).fill(0).map(()=>{
+    const x = Math.random()*stageW;
+    return {
+      x,
+      y: stageH + Math.random()*stageH,     // يبدأ أسفل الشاشة
+      speed: (1.1 + Math.random()*1.6),      // سرعة الصعود
+      size: 12 + Math.random()*10,
+      alpha: 0.15 + Math.random()*0.55,
+      glyph: RAIN_GLYPHS[(Math.random()*RAIN_GLYPHS.length)|0],
+      changeEvery: 4 + Math.floor(Math.random()*8),
+      tick: 0
+    };
   });
+}
+
+function drawRain(){
+  bctx.fillStyle = 'rgba(2,4,9,0.22)';
+  bctx.fillRect(0,0,stageW,stageH);
   rainCols.forEach(c=>{
-    c.tick+=k; if(c.tick>=c.changeEvery){ c.glyph=RAIN_GLYPHS[(Math.random()*RAIN_GLYPHS.length)|0]; c.tick=0; }
-    bctx.font=c.size+'px monospace'; bctx.fillStyle=`rgba(57,255,158,${c.alpha})`;
+    c.tick++;
+    if(c.tick >= c.changeEvery){ c.glyph = RAIN_GLYPHS[(Math.random()*RAIN_GLYPHS.length)|0]; c.tick = 0; }
+    bctx.font = c.size+'px monospace';
+    bctx.fillStyle = `rgba(57,255,158,${c.alpha})`;
     bctx.fillText(c.glyph, c.x, c.y);
-    c.y-=c.speed*k;
-    if(c.y<-20){ c.y=stageH+Math.random()*60; c.alpha=0.15+Math.random()*0.55; }
+    c.y -= c.speed;
+    if(c.y < -20){ c.y = stageH + Math.random()*60; c.alpha = 0.15+Math.random()*0.55; }
   });
 }
-function drawAmbient(dt){
-  const k=dt/16.67; const step=15;
-  bctx.fillStyle='rgba(3,5,10,0.14)'; bctx.fillRect(0,0,stageW,stageH); bctx.font=step+'px monospace';
+
+function drawAmbient(){
+  const step = 15;
+  bctx.fillStyle = 'rgba(3,5,10,0.14)';
+  bctx.fillRect(0,0,stageW,stageH);
+  bctx.font = step+'px monospace';
   rainCols.forEach(c=>{
-    bctx.fillStyle=`rgba(63,232,201,${0.04+c.alpha*0.09})`; bctx.fillText(c.glyph, c.x, c.y);
-    c.y+=c.speed*0.35*k; if(c.y>stageH+step) c.y=-step*2;
+    bctx.fillStyle = `rgba(63,232,201,${0.04+c.alpha*0.09})`;
+    bctx.fillText(c.glyph, c.x, c.y);
+    c.y += c.speed*0.35;
+    if(c.y > stageH + step) c.y = -step*2;
   });
 }
-let lastBgT=performance.now();
-function bgLoop(now){
-  const dt=Math.min(now-lastBgT,48); lastBgT=now;
-  if(canvasMode==='rain') drawRain(dt); else drawAmbient(dt);
+
+function bgLoop(){
+  if(canvasMode === 'rain') drawRain();
+  else if(canvasMode === 'ambient') drawAmbient();
+  else bctx.clearRect(0,0,stageW,stageH);
   requestAnimationFrame(bgLoop);
 }
 
-/* ============ نظام الجسيمات المُجمّعة (Object Pool على Canvas) ============ */
-const MAX_PARTICLES=260;
-const particlePool=[];
-for(let i=0;i<MAX_PARTICLES;i++) particlePool.push({active:false});
-function spawnParticle(opts){
-  const p=particlePool.find(p=>!p.active); if(!p) return;
-  Object.assign(p,{active:true,age:0}, opts);
-}
-const shockwaves=[];
-
-function burst(cx,cy,text){
-  const colors=['#ffb454','#7cf9e0','#3fe8c9','#ffd28a'];
-  const sparkCount=Math.round(16*PERF.particleMult);
-  for(let i=0;i<sparkCount;i++){
-    const angle=Math.random()*Math.PI*2, speed=1.6+Math.random()*3.2;
-    spawnParticle({
-      kind:'spark', x:cx, y:cy, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed,
-      life: 420+Math.random()*260, size:2+Math.random()*2.6, color: colors[(Math.random()*colors.length)|0], drag:0.965
-    });
-  }
-  // شظايا الحروف — كل حرف يتفكك إلى قطعة مستقلة
-  const glyphs = text.split('');
-  glyphs.forEach((g,i)=>{
-    const angle = (i/glyphs.length)*Math.PI*2 + Math.random()*0.6;
-    const speed = 1.2+Math.random()*2.4;
-    spawnParticle({
-      kind:'glyph', text:g, x:cx+(Math.random()-0.5)*14, y:cy+(Math.random()-0.5)*10,
-      vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed-1.4, vr:(Math.random()-0.5)*10,
-      rot:0, life:620+Math.random()*280, size:15+Math.random()*4,
-      color: colors[(Math.random()*colors.length)|0], drag:0.965, grav:0.045
-    });
-  });
-  shockwaves.push({x:cx,y:cy,age:0,life:400,maxR:90+Math.random()*20});
-  shockwaves.push({x:cx,y:cy,age:0,life:560,maxR:130,delay:70});
-}
-function updateAndDrawFX(dt){
-  fctx.clearRect(0,0,stageW,stageH);
-  const k=dt/16.67;
-  particlePool.forEach(p=>{
-    if(!p.active) return;
-    p.age+=dt;
-    if(p.age>=p.life){ p.active=false; return; }
-    p.vx*=Math.pow(p.drag,k); p.vy*=Math.pow(p.drag,k);
-    if(p.grav) p.vy+=p.grav*k;
-    p.x+=p.vx*k; p.y+=p.vy*k;
-    const tt=p.age/p.life; const fade=1-Ease.outCubic(tt);
-    if(p.kind==='spark'){
-      fctx.globalAlpha=Math.max(fade,0);
-      fctx.fillStyle=p.color; fctx.shadowColor=p.color; fctx.shadowBlur=8;
-      fctx.beginPath(); fctx.arc(p.x,p.y,p.size*fade+0.6,0,Math.PI*2); fctx.fill();
-    } else if(p.kind==='glyph'){
-      p.rot += (p.vr||0)*k*0.02;
-      fctx.save();
-      fctx.globalAlpha=Math.max(fade,0);
-      fctx.translate(p.x,p.y); fctx.rotate(p.rot);
-      fctx.font=`700 ${p.size}px Segoe UI, Tahoma, sans-serif`;
-      fctx.textAlign='center'; fctx.textBaseline='middle';
-      fctx.shadowColor=p.color; fctx.shadowBlur=10;
-      fctx.fillStyle=p.color; fctx.fillText(p.text,0,0);
-      fctx.restore();
-    }
-    fctx.shadowBlur=0; fctx.globalAlpha=1;
-  });
-  for(let i=shockwaves.length-1;i>=0;i--){
-    const s=shockwaves[i];
-    if(s.delay && s.delay>0){ s.delay-=dt; continue; }
-    s.age+=dt;
-    if(s.age>=s.life){ shockwaves.splice(i,1); continue; }
-    const tt=s.age/s.life; const r=Ease.outQuint(tt)*s.maxR; const alpha=1-tt;
-    fctx.globalAlpha=alpha*0.85;
-    fctx.strokeStyle='#ffb454'; fctx.lineWidth=Math.max(2.4*(1-tt),0.4);
-    fctx.beginPath(); fctx.arc(s.x,s.y,r,0,Math.PI*2); fctx.stroke();
-  }
-  fctx.globalAlpha=1;
-}
-
-/* ============ حالة اللعبة ============ */
-let score=0, lives=3, level=1, wordsDestroyed=0, keysCorrect=0, keysTotal=0, combo=0, bestCombo=0;
+/* =========================================================
+   حالة اللعبة
+========================================================= */
+let score=0, lives=3, level=1, wordsDestroyed=0, keysCorrect=0, keysTotal=0;
 let words=[], activeWord=null, running=false, spawnTimer=null;
-let startTime=0, timeTimer=null, lastGameT=performance.now();
+let startTime=0, timeTimer=null;
 
 function fmtTime(sec){ return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; }
-function pulseBlock(el){ el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); setTimeout(()=>el.classList.remove('pulse'),200); }
-function updateHud(){
-  scoreEl.textContent=score; levelEl.textContent=level;
-  livesEl.innerHTML="";
-  for(let i=0;i<3;i++){ const d=document.createElement('span'); d.className='life-dot'+(i<lives?'':' lost'); livesEl.appendChild(d); }
-  const acc = keysTotal===0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
-  accuracyEl.textContent = acc+'%';
-}
-function updateCombo(){
-  if(combo>=2){
-    comboWrap.textContent = `سلسلة × ${combo}`;
-    comboWrap.classList.add('show');
-  } else {
-    comboWrap.classList.remove('show');
-  }
-}
-function tickTime(){ if(running) timeEl.textContent=fmtTime(Math.floor((Date.now()-startTime)/1000)); }
 
-/* ============ الكلمات ============ */
+function updateHud(){
+  scoreEl.textContent = score;
+  levelEl.textContent = level;
+  livesEl.innerHTML = "";
+  for(let i=0;i<3;i++){
+    const d = document.createElement('span');
+    d.className = 'life-dot' + (i < lives ? '' : ' lost');
+    livesEl.appendChild(d);
+  }
+  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
+  accuracyEl.textContent = acc + '%';
+}
+function tickTime(){ if(running) timeEl.textContent = fmtTime(Math.floor((Date.now()-startTime)/1000)); }
+
+/* =========================================================
+   تشغيل الكلمات
+========================================================= */
 function spawnWord(){
   if(!running) return;
-  const text=WORDS[(Math.random()*WORDS.length)|0];
-  const el=document.createElement('div');
-  el.className='word';
-  el.innerHTML=`<span class="typed"></span><span class="rest">${text}</span>`;
+  const text = WORDS[(Math.random()*WORDS.length)|0];
+  const el = document.createElement('div');
+  el.className = 'word';
+  el.innerHTML = `<span class="typed"></span><span class="rest">${text}</span>`;
   stage.appendChild(el);
-  const margin = stageW>900 ? 60:20;
-  const x=Math.random()*(stageW-150-margin*2)+margin;
-  el.style.left=x+'px'; el.style.top='-46px';
+  const margin = stageW > 900 ? 60 : 20;
+  const x = Math.random() * (stageW - 150 - margin*2) + margin;
+  el.style.left = x + 'px'; el.style.top = '-46px';
   requestAnimationFrame(()=> el.classList.add('in'));
-  const speed=(0.42+level*0.11+Math.random()*0.18);
-  words.push({el,text,typedCount:0,y:-46,speed});
+  const speed = 0.42 + level*0.11 + Math.random()*0.18;
+  words.push({el, text, typedCount:0, y:-46, speed});
 }
 function renderWordProgress(w){
-  w.el.querySelector('.typed').textContent=w.text.slice(0,w.typedCount);
-  w.el.querySelector('.rest').textContent=w.text.slice(w.typedCount);
+  w.el.querySelector('.typed').textContent = w.text.slice(0, w.typedCount);
+  w.el.querySelector('.rest').textContent = w.text.slice(w.typedCount);
 }
 function explode(w){
-  const cx=parseFloat(w.el.style.left)+w.el.offsetWidth/2;
-  const cy=w.y+w.el.offsetHeight/2;
-  burst(cx,cy,w.text);
+  const cx = parseFloat(w.el.style.left) + w.el.offsetWidth/2;
+  const cy = w.y + w.el.offsetHeight/2;
+  const colors = ['#ffb454','#7cf9e0','#3fe8c9'];
+  const n = Math.round(14 * PERF.particleMult);
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const c = colors[(Math.random()*colors.length)|0];
+    p.style.background = c; p.style.boxShadow = `0 0 8px ${c}`;
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    stage.appendChild(p);
+    const angle = Math.random()*Math.PI*2, dist = 30+Math.random()*60;
+    const anim = p.animate([
+      {transform:'translate(0,0) scale(1)', opacity:1},
+      {transform:`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0.15)`, opacity:0}
+    ], {duration:420+Math.random()*220, easing:'cubic-bezier(.2,.8,.3,1)'});
+    anim.onfinish = ()=> p.remove();
+  }
+  const ring = document.createElement('div');
+  ring.className = 'shockwave';
+  ring.style.left = cx+'px'; ring.style.top = cy+'px';
+  ring.style.width='8px'; ring.style.height='8px'; ring.style.marginLeft='-4px'; ring.style.marginTop='-4px';
+  stage.appendChild(ring);
+  const ringAnim = ring.animate([
+    {width:'8px',height:'8px',marginLeft:'-4px',marginTop:'-4px',opacity:.9,borderWidth:'2px'},
+    {width:'110px',height:'110px',marginLeft:'-55px',marginTop:'-55px',opacity:0,borderWidth:'0.5px'}
+  ], {duration:380, easing:'ease-out'});
+  ringAnim.onfinish = ()=> ring.remove();
 
-  w.el.classList.add('pop');
-  setTimeout(()=>w.el.remove(),210);
+  w.el.style.transition = 'transform .18s var(--ease), opacity .18s var(--ease), filter .18s';
+  w.el.style.transform = 'scale(1.7)'; w.el.style.opacity = '0'; w.el.style.filter = 'brightness(2)';
+  setTimeout(()=> w.el.remove(), 180);
 
   Sound.play('explosion');
-  combo++; bestCombo=Math.max(bestCombo,combo);
-  const comboMult = 1 + Math.min(combo,10)*0.08;
-  score += Math.round(w.text.length*10*comboMult);
-  wordsDestroyed++;
-  pulseBlock(scoreBlock);
-  updateHud(); updateCombo();
-  screenFlashGlow();
+  score += w.text.length * 10; wordsDestroyed++;
+  updateHud();
   if(score > level*300) levelUp();
 }
-function screenFlashGlow(){
-  coreRing.style.transition='none'; coreRing.style.opacity='0.9'; coreRing.style.width='10px'; coreRing.style.height='10px'; coreRing.style.marginLeft='-5px';
-  requestAnimationFrame(()=>{
-    coreRing.style.transition='width .4s var(--ease-snap), height .4s var(--ease-snap), margin-left .4s var(--ease-snap), opacity .4s var(--ease)';
-    coreRing.style.width='140px'; coreRing.style.height='140px'; coreRing.style.marginLeft='-70px'; coreRing.style.opacity='0';
-  });
-}
 function loseLife(w){
-  w.el.remove(); lives--; combo=0; updateCombo(); screenShake(); flashRed(); updateHud();
-  if(lives<=0) endGame();
+  w.el.remove(); lives--; screenShake(); redFlashBrief(); updateHud();
+  if(lives <= 0) endGame(false);
 }
-function screenShake(){
-  coreEl.classList.add('hit'); hud.classList.add('shake');
-  setTimeout(()=>{coreEl.classList.remove('hit'); hud.classList.remove('shake');},340);
-}
-function flashRed(){ flashFx.style.opacity='1'; setTimeout(()=>{flashFx.style.opacity='0';},150); }
+function screenShake(){ coreEl.classList.add('hit'); setTimeout(()=> coreEl.classList.remove('hit'), 300); }
+function redFlashBrief(){ noiseEl.style.opacity = '1'; setTimeout(()=>{ noiseEl.style.opacity = '0'; }, 150); }
 
-/* حلقة اللعب بمتغير الزمن (Delta Time) */
-function gameLoop(now){
-  const dt=Math.min(now-lastGameT,48); lastGameT=now;
-  if(running){
-    monitorFrame();
-    const k=dt/16.67;
-    words.forEach(w=>{ w.y+=w.speed*k; w.el.style.top=w.y+'px'; if(w.y>stageH-100) loseLife(w); });
-    words=words.filter(w=>w.y<=stageH-100);
-  }
-  updateAndDrawFX(dt);
+function gameLoop(){
+  if(!running) return;
+  monitorFrame();
+  words.forEach(w=>{ w.y += w.speed; w.el.style.top = w.y+'px'; if(w.y > stageH - 100) loseLife(w); });
+  words = words.filter(w => w.y <= stageH - 100);
   requestAnimationFrame(gameLoop);
 }
 
-/* ============ الكتابة ============ */
+/* =========================================================
+   الكتابة
+========================================================= */
 function handleKey(e){
   if(!running) return;
-  const key=e.key;
-  if(key.length!==1 || !/[\u0621-\u064A]/.test(key)) return;
-  if(activeWord && !words.includes(activeWord)) activeWord=null;
+  const key = e.key;
+  if(key.length !== 1 || !/[\u0621-\u064A]/.test(key)) return;
+  if(activeWord && !words.includes(activeWord)) activeWord = null;
 
   if(activeWord){
     keysTotal++;
-    if(activeWord.text[activeWord.typedCount]===key){
+    if(activeWord.text[activeWord.typedCount] === key){
       keysCorrect++; activeWord.typedCount++; renderWordProgress(activeWord);
-      if(activeWord.typedCount===activeWord.text.length){
-        explode(activeWord); words=words.filter(w=>w!==activeWord); activeWord=null;
+      if(activeWord.typedCount === activeWord.text.length){
+        explode(activeWord); words = words.filter(w=>w!==activeWord); activeWord = null;
       }
     }
     updateHud(); return;
   }
-  const candidates=words.filter(w=>w.text[0]===key);
-  if(candidates.length===0) return;
+  const candidates = words.filter(w => w.text[0] === key);
+  if(candidates.length === 0) return;
   keysTotal++; keysCorrect++;
-  candidates.sort((a,b)=>b.y-a.y);
-  activeWord=candidates[0];
-  activeWord.el.classList.add('locked'); activeWord.typedCount=1;
+  candidates.sort((a,b)=> b.y - a.y);
+  activeWord = candidates[0];
+  activeWord.el.classList.add('locked'); activeWord.typedCount = 1;
   renderWordProgress(activeWord); updateHud();
-  if(activeWord.typedCount===activeWord.text.length){
-    explode(activeWord); words=words.filter(w=>w!==activeWord); activeWord=null;
+  if(activeWord.typedCount === activeWord.text.length){
+    explode(activeWord); words = words.filter(w=>w!==activeWord); activeWord = null;
   }
 }
 window.addEventListener('keydown', handleKey);
@@ -594,40 +547,43 @@ mobileInput.addEventListener('input', ()=>{ for(const ch of mobileInput.value) h
 stage.addEventListener('touchstart', ()=> running && mobileInput.focus());
 stage.addEventListener('click', ()=> running && mobileInput.focus());
 
-/* ============ إدارة المراحل ============ */
+/* =========================================================
+   إدارة المراحل
+========================================================= */
 function startGame(){
-  score=0; lives=3; level=1; wordsDestroyed=0; keysCorrect=0; keysTotal=0; combo=0; bestCombo=0;
+  score=0; lives=3; level=1; wordsDestroyed=0; keysCorrect=0; keysTotal=0;
   words.forEach(w=>w.el.remove()); words=[]; activeWord=null;
-  updateHud(); updateCombo();
+  updateHud();
   hud.classList.add('show');
-  canvasMode='ambient'; buildRainColumns();
-  running=true; startTime=Date.now(); lastGameT=performance.now();
-  clearInterval(timeTimer); timeTimer=setInterval(tickTime,500);
-  clearInterval(spawnTimer); spawnTimer=setInterval(spawnWord, Math.max(1600-level*80,700));
+  canvasMode = 'ambient'; buildRainColumns();
+  running = true; startTime = Date.now();
+  clearInterval(timeTimer); timeTimer = setInterval(tickTime, 500);
+  clearInterval(spawnTimer); spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
+  requestAnimationFrame(gameLoop);
 }
 function levelUp(){
-  level++; updateHud(); pulseBlock(levelBlock); running=false; clearInterval(spawnTimer);
-  levelUpOverlay.style.display='flex';
-  requestAnimationFrame(()=>levelUpOverlay.classList.add('show'));
+  level++; updateHud(); running = false; clearInterval(spawnTimer);
+  levelUpOverlay.style.display = 'flex';
+  requestAnimationFrame(()=> levelUpOverlay.classList.add('show'));
   setTimeout(()=>{
     levelUpOverlay.classList.remove('show');
-    setTimeout(()=>{ levelUpOverlay.style.display='none'; },450);
-    running=true; lastGameT=performance.now();
-    spawnTimer=setInterval(spawnWord, Math.max(1600-level*80,700));
-  },1600);
+    setTimeout(()=>{ levelUpOverlay.style.display = 'none'; }, 450);
+    running = true;
+    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
+  }, 1600);
 }
 function endGame(){
-  running=false; clearInterval(spawnTimer); clearInterval(timeTimer);
+  running = false; clearInterval(spawnTimer); clearInterval(timeTimer);
   words.forEach(w=>w.el.remove()); words=[];
-  hud.classList.remove('show'); comboWrap.classList.remove('show'); canvasMode='ambient';
+  hud.classList.remove('show'); canvasMode = 'idle';
 
-  const elapsed=Math.floor((Date.now()-startTime)/1000);
-  const acc=keysTotal===0?100:Math.round((keysCorrect/keysTotal)*100);
-  const best=Math.max(score, parseInt(localStorage.getItem(BEST_KEY)||'0',10));
+  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
+  const best = Math.max(score, parseInt(localStorage.getItem(BEST_KEY) || '0', 10));
   localStorage.setItem(BEST_KEY, best);
   Sound.play('fail');
 
-  overlay.querySelector('.panel').innerHTML=`
+  overlay.querySelector('.panel').innerHTML = `
     <h1 class="danger">تم اختراق نظام الدفاع</h1>
     <p>فشل احتواء الهجوم. راجع إحصائياتك أدناه وحاول مجددًا.</p>
     <div id="statsGrid">
@@ -639,129 +595,112 @@ function endGame(){
       <div class="glass box"><div class="lbl">أفضل نتيجة</div><div class="val">${best}</div></div>
     </div>
     <button id="startBtn">إعادة المهمة</button>`;
-  overlay.style.display='flex';
+  overlay.style.display = 'flex';
   document.getElementById('startBtn').addEventListener('click', beginSequence);
 }
 
-/* ============ المقدمة السينمائية ============ */
-const wait = ms => new Promise(r=>setTimeout(r,ms));
-function typeLine(el,text,speed){
+/* =========================================================
+   المقدمة السينمائية الكاملة
+========================================================= */
+const wait = ms => new Promise(r=> setTimeout(r, ms));
+
+function typeLine(el, text, speed){
   return new Promise(resolve=>{
     let i=0; el.style.opacity='1';
-    const iv=setInterval(()=>{ el.textContent=text.slice(0,i); i++; if(i>text.length){ clearInterval(iv); resolve(); } }, speed);
+    const iv = setInterval(()=>{
+      el.textContent = text.slice(0,i); i++;
+      if(i > text.length){ clearInterval(iv); resolve(); }
+    }, speed);
   });
 }
-async function playRainIntro(){ canvasMode='rain'; buildRainColumns(); await wait(2000); }
 
+// المرحلة ١: مطر الأكواد الصاعدة على شاشة سوداء (~2 ثانية)
+async function playRainIntro(){
+  canvasMode = 'rain';
+  buildRainColumns();
+  await wait(2000);
+}
+
+// المرحلة ٢: أسطر الاختراق النصية فوق المطر المستمر
 async function playBootLines(){
-  bootScreen.style.display='flex';
-  requestAnimationFrame(()=>bootScreen.classList.add('show'));
-  bootLinesEl.innerHTML='';
+  bootScreen.style.display = 'block';
+  requestAnimationFrame(()=> bootScreen.classList.add('show'));
+  bootLinesEl.innerHTML = '';
   Sound.play('boot');
   for(const line of BOOT_LINES){
-    const div=document.createElement('div'); div.className='line'; bootLinesEl.appendChild(div);
-    await typeLine(div,line,42); await wait(190);
+    const div = document.createElement('div');
+    div.className = 'line';
+    bootLinesEl.appendChild(div);
+    await typeLine(div, line, 42);
+    await wait(190);
   }
   await wait(400);
-  bootScreen.classList.add('glitch'); Sound.play('alarm');
-  await wait(560);
-  bootScreen.classList.remove('glitch'); bootScreen.classList.remove('show');
-  await wait(500); bootScreen.style.display='none';
-}
-
-/* شرائح تشويش (Glitch Slices) مرسومة إجرائيًا فوق شاشة الاختراق — بدون أي مكتبة */
-let glitchActive=false, glitchRAF=null;
-function glitchFrame(){
-  if(!glitchActive) return;
-  gctx.clearRect(0,0,stageW,stageH);
-  const sliceCount = PERF.mode==='low' ? 5 : 9;
-  for(let i=0;i<sliceCount;i++){
-    if(Math.random()>0.6) continue;
-    const h=6+Math.random()*22;
-    const y=Math.random()*stageH;
-    const offset=(Math.random()-0.5)*40;
-    gctx.save();
-    gctx.globalAlpha=0.16+Math.random()*0.22;
-    gctx.fillStyle = Math.random()>0.5 ? 'rgba(255,59,78,0.9)' : 'rgba(63,232,201,0.7)';
-    gctx.fillRect(offset, y, stageW, h);
-    gctx.restore();
-  }
-  glitchRAF=requestAnimationFrame(glitchFrame);
-}
-function startGlitch(){ if(glitchActive) return; glitchActive=true; breachGlitchCanvas.classList.add('on'); glitchFrame(); }
-function stopGlitch(){ glitchActive=false; breachGlitchCanvas.classList.remove('on'); cancelAnimationFrame(glitchRAF); gctx.clearRect(0,0,stageW,stageH); }
-
-function resetBreachElements(){
-  triangleWarn.className=''; triangleWarn.style.opacity=''; triangleWarn.style.transform=''; triangleWarn.style.transition='';
-  breachTitle.className=''; breachSub.className=''; breachStatus.className='';
-}
-async function shakeStage(intensity, dur){
-  const start=performance.now();
-  function frame(now){
-    const t=(now-start)/dur;
-    if(t>=1){ stage.style.transform='translate(0,0)'; return; }
-    const decay=1-t;
-    const dx=(Math.random()-0.5)*intensity*decay, dy=(Math.random()-0.5)*intensity*decay;
-    stage.style.transform=`translate(${dx}px,${dy}px)`;
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-  await wait(dur);
-}
-async function playBreachSequence(){
-  resetBreachElements();
-  breachOverlay.style.display='flex';
-  requestAnimationFrame(()=>breachOverlay.classList.add('show','flash'));
-  startGlitch();
-  shakeStage(10, 420);
-  await wait(120);
-  triangleWarn.classList.add('enter'); breachTitle.classList.add('enter');
+  bootScreen.classList.add('glitch');
   Sound.play('alarm');
+  await wait(560);
+  bootScreen.classList.remove('glitch');
+  bootScreen.classList.remove('show');
+  await wait(500);
+  bootScreen.style.display = 'none';
+}
+
+// المرحلة ٣: تحذير "تم اختراق جهازك" — دخول سينمائي، بقاء، خروج تدريجي
+async function playBreachSequence(){
+  breachOverlay.style.display = 'flex';
+  requestAnimationFrame(()=> breachOverlay.classList.add('show', 'flash'));
+  await wait(120);
+  triangleWarn.classList.add('enter');
+  breachTitle.classList.add('enter');
   await wait(380);
-  triangleWarn.classList.add('idle'); breachTitle.classList.add('idle');
+  triangleWarn.classList.add('idle');
+  breachTitle.classList.add('idle');
   breachSub.classList.add('show');
   await wait(300);
   breachStatus.classList.add('show');
-  // نبضات إضافية عشوائية أثناء الانتظار لإحساس أكثر واقعية
-  let elapsedWait=0;
-  while(elapsedWait<2700){
-    const step=Math.min(500+Math.random()*400, 2700-elapsedWait);
-    await wait(step); elapsedWait+=step;
-    if(Math.random()>0.55) shakeStage(4,180);
-  }
-  breachTitle.classList.remove('idle'); breachTitle.classList.add('exit');
+
+  await wait(2700); // بقاء الرسالة ظاهرة بوضوح
+
+  breachTitle.classList.remove('idle');
+  breachTitle.classList.add('exit');
   breachOverlay.classList.remove('flash');
-  breachSub.classList.remove('show'); breachStatus.classList.remove('show');
+  breachSub.classList.remove('show');
+  breachStatus.classList.remove('show');
   triangleWarn.classList.remove('idle');
-  triangleWarn.style.transition='opacity .7s var(--ease), transform .7s var(--ease)';
-  triangleWarn.style.opacity='0'; triangleWarn.style.transform='scale(0.9)';
-  stopGlitch();
+  triangleWarn.style.transition = 'opacity .7s var(--ease), transform .7s var(--ease)';
+  triangleWarn.style.opacity = '0';
+  triangleWarn.style.transform = 'scale(0.9)';
   breachOverlay.classList.remove('show');
   await wait(750);
-  breachOverlay.style.display='none';
-  resetBreachElements();
+  breachOverlay.style.display = 'none';
+  // إعادة الحالة الأولية للاستخدام لاحقاً
+  triangleWarn.className = ''; triangleWarn.style.cssText = 'width:126px;height:118px;margin-bottom:20px;';
+  breachTitle.className = '';
+  breachSub.className = ''; breachStatus.className = '';
 }
+
+// المرحلة ٤: تفعيل نظام الدفاع + عدّ تنازلي
 async function playDefenseSequence(){
-  defenseOverlay.style.display='flex';
-  requestAnimationFrame(()=>defenseOverlay.classList.add('show'));
+  defenseOverlay.style.display = 'flex';
+  requestAnimationFrame(()=> defenseOverlay.classList.add('show'));
   await wait(150);
   defenseTitle.classList.add('show');
   await wait(950);
   for(const n of ['٣','٢','١']){
-    countdownNum.classList.remove('show'); await wait(60);
-    countdownNum.textContent=n;
-    requestAnimationFrame(()=>countdownNum.classList.add('show'));
+    countdownNum.classList.remove('show');
+    await wait(60);
+    countdownNum.textContent = n;
+    requestAnimationFrame(()=> countdownNum.classList.add('show'));
     await wait(760);
   }
   defenseOverlay.classList.remove('show');
   await wait(500);
-  defenseOverlay.style.display='none';
+  defenseOverlay.style.display = 'none';
   defenseTitle.classList.remove('show');
-  countdownNum.classList.remove('show'); countdownNum.textContent='';
+  countdownNum.classList.remove('show'); countdownNum.textContent = '';
 }
 
 async function beginSequence(){
-  overlay.style.display='none';
+  overlay.style.display = 'none';
   resizeCanvas();
   await playRainIntro();
   await playBootLines();
@@ -770,17 +709,17 @@ async function beginSequence(){
   startGame();
   mobileInput.focus();
 }
+
 startBtn.addEventListener('click', beginSequence);
 
 /* إعادة ضبط سرعة توليد الكلمات مع تغيّر المستوى */
 setInterval(()=>{
-  if(running){ clearInterval(spawnTimer); spawnTimer=setInterval(spawnWord, Math.max(1600-level*80,700)); }
-},3000);
+  if(running){ clearInterval(spawnTimer); spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700)); }
+}, 3000);
 
-/* الوضع الافتراضي: خلفية مطر هادئة خلف شاشة البداية */
+/* تشغيل حلقة الخلفية دائماً */
 resizeCanvas();
 requestAnimationFrame(bgLoop);
-requestAnimationFrame(gameLoop);
 
 })();
 </script>
