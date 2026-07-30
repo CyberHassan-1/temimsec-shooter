@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>قناص الكلمات</title>
+<style>
+  :root{
+    --void: #05070d;
+    --void2: #0a0e18;
+    --grid: rgba(80,160,255,0.06);
+    --core: #3fe8c9;
+    --core2: #7cf9e0;
+    --danger: #ff4d5e;
+    --amber: #ffb454;
+    --text: #d8e6f2;
+    --dim: #5a6b80;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%; overflow:hidden;
+    background: radial-gradient(ellipse at 50% 20%, var(--void2), var(--void) 70%);
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+  }
+  #stage{
+    position:relative; width:100%; height:100vh;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  #hud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:18px 24px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    z-index:10;
+    pointer-events:none;
+  }
+  .hud-block{ text-align:center; }
+  .hud-label{ font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .hud-value{ font-size:26px; font-weight:700; color:var(--core2); text-shadow:0 0 12px rgba(63,232,201,0.5); }
+  .hud-value.danger{ color:var(--danger); text-shadow:0 0 12px rgba(255,77,94,0.6); }
+  #lives{ display:flex; gap:6px; font-size:20px; }
+
+  #core{
+    position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+    width:120px; height:60px;
+    z-index:5;
+  }
+  #core svg{ width:100%; height:100%; filter: drop-shadow(0 0 14px rgba(63,232,201,0.55)); }
+
+  .word{
+    position:absolute;
+    top:-40px;
+    font-size:20px;
+    white-space:nowrap;
+    padding:4px 10px;
+    border-radius:4px;
+    background: rgba(10,14,24,0.7);
+    border:1px solid rgba(63,232,201,0.25);
+    letter-spacing:1px;
+    z-index:4;
+    transition: filter 0.15s;
+  }
+  .word .typed{ color: var(--amber); text-shadow:0 0 8px rgba(255,180,84,0.7); }
+  .word .rest{ color: var(--text); }
+  .word.locked{ border-color: var(--amber); box-shadow:0 0 14px rgba(255,180,84,0.35); }
+
+  #overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: rgba(5,7,13,0.88);
+    z-index:20; text-align:center;
+    font-family:'Segoe UI', Tahoma, sans-serif;
+  }
+  #overlay h1{
+    font-size:38px; color:var(--core2); letter-spacing:2px;
+    text-shadow:0 0 20px rgba(63,232,201,0.5); margin-bottom:10px;
+  }
+  #overlay p{ color:var(--dim); font-size:14px; margin-bottom:24px; max-width:340px; line-height:1.8; }
+  #overlay .stat{ color:var(--amber); font-size:18px; margin-bottom:18px; }
+  button{
+    background: linear-gradient(180deg, rgba(63,232,201,0.15), rgba(63,232,201,0.05));
+    border:1px solid var(--core);
+    color:var(--core2);
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    font-size:15px; letter-spacing:1px;
+    padding:12px 32px; border-radius:6px; cursor:pointer;
+    transition: all 0.2s;
+  }
+  button:hover{ background: rgba(63,232,201,0.25); box-shadow:0 0 16px rgba(63,232,201,0.4); }
+
+  .shot{
+    position:absolute; bottom:60px; left:50%;
+    width:2px; height:0;
+    background: linear-gradient(var(--amber), transparent);
+    z-index:3; transform-origin: bottom center;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">النقاط</div>
+      <div class="hud-value" id="score">0</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">الأرواح</div>
+      <div id="lives">💠💠💠</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">المستوى</div>
+      <div class="hud-value" id="level">1</div>
+    </div>
+  </div>
+
+  <div id="core">
+    <svg viewBox="0 0 120 60">
+      <polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="2"/>
+      <circle cx="60" cy="40" r="8" fill="#3fe8c9" opacity="0.8"/>
+    </svg>
+  </div>
+
+  <div id="overlay">
+    <h1>قناص الكلمات</h1>
+    <p>كلمات تنزل نحو المركز. اكتبها صح بالترتيب الحرفي عشن تنفجر قبل ما توصل. الكلمة الفاتحة (البرتقالية) هي اللي تكتب فيها الحين.</p>
+    <button id="startBtn">ابدأ اللعب</button>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  "برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
+  "دفاع","كود","ذاكرة","معالج","بروتوكول","منفذ","جدار","تحليل","تسجيل","دخول",
+  "كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
+  "خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"
+];
+
+const stage = document.getElementById('stage');
+const scoreEl = document.getElementById('score');
+const levelEl = document.getElementById('level');
+const livesEl = document.getElementById('lives');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+
+let score = 0, lives = 3, level = 1;
+let words = []; // {el, text, typedCount, x, y, speed}
+let activeWord = null;
+let running = false;
+let spawnTimer = null;
+let stageW, stageH;
+
+function updateHud(){
+  scoreEl.textContent = score;
+  levelEl.textContent = level;
+  livesEl.textContent = "💠".repeat(Math.max(lives,0)) + "▫️".repeat(Math.max(3-lives,0));
+}
+
+function spawnWord(){
+  if(!running) return;
+  const text = WORDS[Math.floor(Math.random()*WORDS.length)];
+  const el = document.createElement('div');
+  el.className = 'word';
+  el.innerHTML = `<span class="typed"></span><span class="rest">${text}</span>`;
+  stage.appendChild(el);
+  stageW = stage.clientWidth; stageH = stage.clientHeight;
+  const x = Math.random() * (stageW - 140) + 20;
+  el.style.left = x + 'px';
+  el.style.top = '-40px';
+  const speed = 0.4 + level * 0.12 + Math.random()*0.2;
+  words.push({el, text, typedCount:0, y:-40, speed});
+}
+
+function explode(w){
+  w.el.style.transition = 'transform 0.2s, opacity 0.2s';
+  w.el.style.transform = 'scale(1.6)';
+  w.el.style.opacity = '0';
+  setTimeout(()=> w.el.remove(), 200);
+  score += w.text.length * 10;
+  updateHud();
+  if(score > level * 300){
+    level++;
+    updateHud();
+  }
+}
+
+function loseLife(w){
+  w.el.remove();
+  lives--;
+  updateHud();
+  if(lives <= 0){
+    endGame();
+  }
+}
+
+function gameLoop(){
+  if(!running) return;
+  words.forEach(w=>{
+    w.y += w.speed;
+    w.el.style.top = w.y + 'px';
+    if(w.y > stageH - 90){
+      loseLife(w);
+    }
+  });
+  words = words.filter(w=> w.y <= stageH - 90);
+  if(running) requestAnimationFrame(gameLoop);
+}
+
+function handleKey(e){
+  if(!running) return;
+  const key = e.key;
+  if(key.length !== 1 || !/[\u0621-\u064A]/.test(key)) return;
+  const k = key;
+
+  if(activeWord && !words.includes(activeWord)){
+    activeWord = null;
+  }
+
+  if(activeWord){
+    if(activeWord.text[activeWord.typedCount] === k){
+      activeWord.typedCount++;
+      renderWordProgress(activeWord);
+      if(activeWord.typedCount === activeWord.text.length){
+        explode(activeWord);
+        words = words.filter(w=>w!==activeWord);
+        activeWord = null;
+      }
+    }
+    return;
+  }
+
+  // find a word starting with k, closest to core
+  let candidates = words.filter(w => w.text[0] === k);
+  if(candidates.length === 0) return;
+  candidates.sort((a,b)=> b.y - a.y);
+  activeWord = candidates[0];
+  activeWord.typedCount = 1;
+  activeWord.el.classList.add('locked');
+  renderWordProgress(activeWord);
+  if(activeWord.typedCount === activeWord.text.length){
+    explode(activeWord);
+    words = words.filter(w=>w!==activeWord);
+    activeWord = null;
+  }
+}
+
+function renderWordProgress(w){
+  const typedSpan = w.el.querySelector('.typed');
+  const restSpan = w.el.querySelector('.rest');
+  typedSpan.textContent = w.text.slice(0, w.typedCount);
+  restSpan.textContent = w.text.slice(w.typedCount);
+}
+
+function startGame(){
+  score = 0; lives = 3; level = 1;
+  words.forEach(w=>w.el.remove());
+  words = [];
+  activeWord = null;
+  updateHud();
+  overlay.style.display = 'none';
+  running = true;
+  clearInterval(spawnTimer);
+  spawnTimer = setInterval(()=>{
+    spawnWord();
+  }, Math.max(1600 - level*80, 700));
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  running = false;
+  clearInterval(spawnTimer);
+  words.forEach(w=>w.el.remove());
+  words = [];
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <h1>انتهت اللعبة</h1>
+    <div class="stat">نقاطك: ${score} — المستوى: ${level}</div>
+    <p>جرب مرة ثانية وكسر رقمك.</p>
+    <button id="startBtn">إعادة اللعب</button>
+  `;
+  document.getElementById('startBtn').addEventListener('click', startGame);
+}
+
+startBtn.addEventListener('click', startGame);
+window.addEventListener('keydown', handleKey);
+
+// re-adjust spawn rate as level changes
+setInterval(()=>{
+  if(running){
+    clearInterval(spawnTimer);
+    spawnTimer = setInterval(spawnWord, Math.max(1600 - level*80, 700));
+  }
+}, 3000);
+</script>
+</body>
+</html>
