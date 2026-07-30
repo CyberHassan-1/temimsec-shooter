@@ -2,224 +2,480 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>قناص الكلمات</title>
 <style>
   :root{
-    --void: #05070d;
-    --void2: #0a0e18;
-    --grid: rgba(80,160,255,0.06);
-    --core: #3fe8c9;
-    --core2: #7cf9e0;
-    --danger: #ff4d5e;
-    --amber: #ffb454;
-    --text: #d8e6f2;
-    --dim: #5a6b80;
+    --void:#03050a; --void2:#070c16; --void3:#0c1424;
+    --grid: rgba(80,200,255,0.05);
+    --core:#3fe8c9; --core2:#7cf9e0; --core-dim: rgba(63,232,201,0.25);
+    --danger:#ff3b4e; --danger2:#ff8291;
+    --amber:#ffb454; --amber2:#ffd28a;
+    --text:#dfeef8; --dim:#5d7488; --dim2:#2c3849;
+    --glass: rgba(14,22,36,0.55);
+    --glass-border: rgba(124,249,224,0.18);
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{
-    width:100%; height:100%; overflow:hidden;
-    background: radial-gradient(ellipse at 50% 20%, var(--void2), var(--void) 70%);
-    font-family: 'Courier New', monospace;
-    color: var(--text);
-  }
-  #stage{
-    position:relative; width:100%; height:100vh;
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-  #hud{
-    position:absolute; top:0; left:0; right:0;
-    display:flex; justify-content:space-between; align-items:flex-start;
-    padding:18px 24px;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    z-index:10;
-    pointer-events:none;
-  }
-  .hud-block{ text-align:center; }
-  .hud-label{ font-size:10px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
-  .hud-value{ font-size:26px; font-weight:700; color:var(--core2); text-shadow:0 0 12px rgba(63,232,201,0.5); }
-  .hud-value.danger{ color:var(--danger); text-shadow:0 0 12px rgba(255,77,94,0.6); }
-  #lives{ display:flex; gap:6px; font-size:20px; }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{width:100%; height:100%; overflow:hidden; background:var(--void); font-family:'Segoe UI',Tahoma,sans-serif; color:var(--text); user-select:none;}
 
-  #core{
-    position:absolute; bottom:0; left:50%; transform:translateX(-50%);
-    width:120px; height:60px;
-    z-index:5;
-  }
-  #core svg{ width:100%; height:100%; filter: drop-shadow(0 0 14px rgba(63,232,201,0.55)); }
+  /* ===== المسرح ===== */
+  #stage{position:relative; width:100%; height:100vh; overflow:hidden;
+    background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%); }
 
-  .word{
-    position:absolute;
-    top:-40px;
-    font-size:20px;
-    white-space:nowrap;
-    padding:4px 10px;
-    border-radius:4px;
-    background: rgba(10,14,24,0.7);
-    border:1px solid rgba(63,232,201,0.25);
-    letter-spacing:1px;
-    z-index:4;
-    transition: filter 0.15s;
-  }
-  .word .typed{ color: var(--amber); text-shadow:0 0 8px rgba(255,180,84,0.7); }
-  .word .rest{ color: var(--text); }
-  .word.locked{ border-color: var(--amber); box-shadow:0 0 14px rgba(255,180,84,0.35); }
+  #bgCanvas{position:absolute; inset:0; z-index:0;}
+  #gridOverlay{position:absolute; inset:0; z-index:1; pointer-events:none;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:42px 42px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 85%);}
 
-  #overlay{
-    position:absolute; inset:0;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: rgba(5,7,13,0.88);
-    z-index:20; text-align:center;
-    font-family:'Segoe UI', Tahoma, sans-serif;
-  }
-  #overlay h1{
-    font-size:38px; color:var(--core2); letter-spacing:2px;
-    text-shadow:0 0 20px rgba(63,232,201,0.5); margin-bottom:10px;
-  }
-  #overlay p{ color:var(--dim); font-size:14px; margin-bottom:24px; max-width:340px; line-height:1.8; }
-  #overlay .stat{ color:var(--amber); font-size:18px; margin-bottom:18px; }
-  button{
-    background: linear-gradient(180deg, rgba(63,232,201,0.15), rgba(63,232,201,0.05));
-    border:1px solid var(--core);
-    color:var(--core2);
-    font-family:'Segoe UI', Tahoma, sans-serif;
-    font-size:15px; letter-spacing:1px;
-    padding:12px 32px; border-radius:6px; cursor:pointer;
-    transition: all 0.2s;
-  }
-  button:hover{ background: rgba(63,232,201,0.25); box-shadow:0 0 16px rgba(63,232,201,0.4); }
+  #scanlines{position:absolute; inset:0; z-index:35; pointer-events:none; opacity:0.08;
+    background: repeating-linear-gradient(0deg, #000 0px, transparent 1px, transparent 2px, #000 3px);
+    mix-blend-mode:overlay;}
+  #vignette{position:absolute; inset:0; z-index:34; pointer-events:none;
+    box-shadow: inset 0 0 160px 40px rgba(0,0,0,0.75);}
+  #noise{position:absolute; inset:0; z-index:33; pointer-events:none; opacity:0; transition:opacity .12s;}
 
-  .shot{
-    position:absolute; bottom:60px; left:50%;
-    width:2px; height:0;
-    background: linear-gradient(var(--amber), transparent);
-    z-index:3; transform-origin: bottom center;
+  /* ===== HUD ===== */
+  #hud{position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start;
+    padding:16px 20px; z-index:10; pointer-events:none; opacity:0; transition:opacity .5s;}
+  #hud.show{opacity:1;}
+  .glass{ background:var(--glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border); border-radius:12px; }
+  .hud-block{ padding:8px 16px; text-align:center; min-width:74px; }
+  .hud-label{ font-size:9px; letter-spacing:2px; color:var(--dim); }
+  .hud-value{ font-size:22px; font-weight:700; color:var(--core2); text-shadow:0 0 10px rgba(63,232,201,.5); }
+  #lives{ display:flex; gap:5px; font-size:16px; justify-content:center; margin-top:2px;}
+  .life-dot{ width:11px; height:11px; border-radius:50%; background:var(--core); box-shadow:0 0 8px var(--core);}
+  .life-dot.lost{ background:transparent; border:1px solid var(--dim2); box-shadow:none;}
+
+  #hudRight{ display:flex; flex-direction:column; gap:6px; align-items:flex-end;}
+  #hudRight .glass{ padding:5px 12px; font-size:10px; color:var(--dim); letter-spacing:1px;}
+  #hudRight b{ color:var(--amber2); font-weight:700;}
+
+  /* ===== النواة المركزية ===== */
+  #core{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); width:130px; height:66px; z-index:5;}
+  #core svg{ width:100%; height:100%; filter:drop-shadow(0 0 16px rgba(63,232,201,.6)); }
+  #core.hit{ animation: coreHit .25s ease; }
+  @keyframes coreHit{ 0%,100%{ filter:drop-shadow(0 0 16px rgba(255,59,78,.9)); } 50%{ transform:translateX(-50%) scale(0.9);} }
+
+  /* ===== الكلمات ===== */
+  .word{ position:absolute; top:-46px; font-size:19px; white-space:nowrap; padding:6px 14px; border-radius:8px;
+    background:var(--glass); border:1px solid var(--core-dim); letter-spacing:1px; z-index:4;
+    backdrop-filter:blur(4px); box-shadow:0 0 14px rgba(63,232,201,.12);
+    opacity:0; transform:scale(0.6); transition:opacity .28s ease, transform .28s cubic-bezier(.2,1.4,.4,1); }
+  .word.in{ opacity:1; transform:scale(1); }
+  .word .typed{ color:var(--amber2); text-shadow:0 0 8px rgba(255,180,84,.8);}
+  .word .rest{ color:var(--text); }
+  .word.locked{ border-color:var(--amber); box-shadow:0 0 18px rgba(255,180,84,.4); }
+
+  .particle{ position:absolute; width:5px; height:5px; border-radius:50%; z-index:6; pointer-events:none;}
+  .shockwave{ position:absolute; border-radius:50%; border:2px solid var(--amber); z-index:6; pointer-events:none;}
+
+  /* ===== شاشة الإقلاع (اختراق) ===== */
+  #bootScreen{ position:absolute; inset:0; z-index:50; background:#000; display:none;
+    font-family:'Courier New',monospace; padding:8vh 6vw; color:#39ff9e; }
+  #bootLines{ font-size:15px; line-height:2; text-shadow:0 0 8px rgba(57,255,158,.6);}
+  #bootLines .line{ opacity:0;}
+  #bootCursor{ display:inline-block; width:9px; height:16px; background:#39ff9e; margin-inline-start:4px;
+    animation: blink 1s step-end infinite; vertical-align:middle;}
+  @keyframes blink{ 50%{ opacity:0;} }
+  #bootScreen.glitch{ animation: hardGlitch .5s steps(2) 3; }
+  @keyframes hardGlitch{
+    0%{ transform:translate(0,0); filter:none;}
+    20%{ transform:translate(-6px,3px); filter:hue-rotate(40deg) saturate(3);}
+    40%{ transform:translate(5px,-4px); filter:invert(0.15);}
+    60%{ transform:translate(-4px,-3px); filter:hue-rotate(-30deg);}
+    80%{ transform:translate(6px,2px); filter:none;}
+    100%{ transform:translate(0,0); filter:none;}
+  }
+
+  #breachOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    flex-direction:column; background:rgba(20,0,2,0.35); }
+  #breachOverlay.flash{ animation: redFlash .35s ease infinite; }
+  @keyframes redFlash{ 0%,100%{ background:rgba(20,0,2,0.35);} 50%{ background:rgba(120,0,10,0.55);} }
+  #triangleWarn{ width:120px; height:120px; margin-bottom:18px; filter:drop-shadow(0 0 24px rgba(255,59,78,.8));
+    animation: warnPulse 0.6s ease-in-out infinite;}
+  @keyframes warnPulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.08);} }
+  #breachTitle{ font-size:44px; font-weight:900; color:var(--danger); letter-spacing:3px; text-align:center;
+    text-shadow:0 0 18px var(--danger), 0 0 40px rgba(255,59,78,.6);
+    animation: breachShake .12s linear infinite, breachGlow 1s ease-in-out infinite; }
+  @keyframes breachShake{ 0%{transform:translate(0,0);} 25%{transform:translate(-3px,2px);} 50%{transform:translate(3px,-2px);} 75%{transform:translate(-2px,-2px);} 100%{transform:translate(0,0);} }
+  @keyframes breachGlow{ 0%,100%{ opacity:1;} 50%{ opacity:.72;} }
+  #breachSub{ margin-top:14px; font-size:14px; color:var(--danger2); letter-spacing:2px; }
+  #breachStatus{ margin-top:26px; font-size:13px; color:var(--dim); letter-spacing:1px; }
+
+  #defenseOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    flex-direction:column; background:rgba(0,10,8,0.4); }
+  #defenseTitle{ font-size:30px; font-weight:800; color:var(--core2); letter-spacing:2px; text-align:center;
+    text-shadow:0 0 20px rgba(63,232,201,.7); opacity:0; animation: fadeUp .5s ease forwards;}
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+  #countdownNum{ font-size:90px; font-weight:900; color:var(--amber2); margin-top:20px;
+    text-shadow:0 0 30px rgba(255,180,84,.7); }
+
+  /* ===== شاشات البداية / النهاية ===== */
+  #overlay{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(5,7,13,0.86); z-index:20; text-align:center; padding:20px;}
+  #overlay .panel{ padding:34px 36px; max-width:400px;}
+  #overlay h1{ font-size:34px; color:var(--core2); letter-spacing:2px; text-shadow:0 0 20px rgba(63,232,201,.5); margin-bottom:12px;}
+  #overlay h1.danger{ color:var(--danger); text-shadow:0 0 20px rgba(255,59,78,.6);}
+  #overlay h1.success{ color:var(--amber2); text-shadow:0 0 20px rgba(255,180,84,.6);}
+  #overlay p{ color:var(--dim); font-size:13.5px; margin-bottom:20px; line-height:1.9;}
+  #statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px;}
+  #statsGrid .box{ padding:10px; border-radius:10px;}
+  #statsGrid .box .lbl{ font-size:10px; color:var(--dim); letter-spacing:1px;}
+  #statsGrid .box .val{ font-size:19px; color:var(--core2); font-weight:700; margin-top:2px;}
+  button{ background:linear-gradient(180deg, rgba(63,232,201,0.16), rgba(63,232,201,0.04));
+    border:1px solid var(--core); color:var(--core2); font-size:14.5px; letter-spacing:1px;
+    padding:12px 30px; border-radius:8px; cursor:pointer; transition:all .2s;}
+  button:hover{ background:rgba(63,232,201,0.26); box-shadow:0 0 18px rgba(63,232,201,.4);}
+
+  /* ===== انتقال المستوى ===== */
+  #levelUpOverlay{ position:absolute; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
+    flex-direction:column; background:rgba(6,10,8,0.55);}
+  #levelUpTitle{ font-size:32px; color:var(--amber2); font-weight:800; letter-spacing:2px; text-shadow:0 0 20px rgba(255,180,84,.6);
+    opacity:0; animation: fadeUp .45s ease forwards;}
+  #levelUpSub{ margin-top:10px; font-size:13px; color:var(--dim); opacity:0; animation: fadeUp .45s ease .1s forwards;}
+
+  #tapHint{ position:absolute; bottom:96px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--dim); z-index:6; display:none;}
+  #mobileInput{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none;}
+
+  @media (max-width:640px){
+    .hud-block{ padding:6px 10px; min-width:56px;}
+    .hud-value{ font-size:17px;} .hud-label{ font-size:7.5px;}
+    #core{ width:88px; height:44px;}
+    .word{ font-size:15px; padding:4px 9px;}
+    #overlay h1{ font-size:24px;} #overlay .panel{ padding:26px 22px;}
+    #breachTitle{ font-size:28px;} #defenseTitle{ font-size:22px;} #countdownNum{ font-size:64px;}
+    button{ font-size:13px; padding:10px 24px;}
+    #tapHint{ display:block;}
+    #bootLines{ font-size:12px;}
   }
 </style>
 </head>
 <body>
 <div id="stage">
+  <canvas id="bgCanvas"></canvas>
+  <div id="gridOverlay"></div>
+
   <div id="hud">
-    <div class="hud-block">
+    <div class="glass hud-block">
       <div class="hud-label">النقاط</div>
       <div class="hud-value" id="score">0</div>
     </div>
-    <div class="hud-block">
+    <div class="glass hud-block">
       <div class="hud-label">الأرواح</div>
-      <div id="lives">💠💠💠</div>
+      <div id="lives"></div>
     </div>
-    <div class="hud-block">
+    <div class="glass hud-block">
       <div class="hud-label">المستوى</div>
       <div class="hud-value" id="level">1</div>
+    </div>
+    <div id="hudRight">
+      <div class="glass">الدقة: <b id="accuracyStat">100%</b></div>
+      <div class="glass">الزمن: <b id="timeStat">00:00</b></div>
     </div>
   </div>
 
   <div id="core">
     <svg viewBox="0 0 120 60">
-      <polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="2"/>
-      <circle cx="60" cy="40" r="8" fill="#3fe8c9" opacity="0.8"/>
+      <polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="2.5"/>
+      <circle cx="60" cy="40" r="8" fill="#3fe8c9" opacity="0.85"/>
     </svg>
   </div>
 
+  <!-- شاشة البداية -->
   <div id="overlay">
-    <h1>قناص الكلمات</h1>
-    <p>كلمات تنزل نحو المركز. اكتبها صح بالترتيب الحرفي عشن تنفجر قبل ما توصل. الكلمة الفاتحة (البرتقالية) هي اللي تكتب فيها الحين.</p>
-    <button id="startBtn">ابدأ اللعب</button>
+    <div class="glass panel">
+      <h1>قناص الكلمات</h1>
+      <p>كلمات تنزل نحو النواة. اكتبها حرفًا بحرف بالترتيب لتفجيرها قبل وصولها. الكلمة المضيئة (البرتقالية) هي التي تكتب فيها حاليًا.</p>
+      <button id="startBtn">بدء الاختراق</button>
+    </div>
   </div>
+
+  <!-- انتقال المستوى -->
+  <div id="levelUpOverlay">
+    <div id="levelUpTitle">تم صد الهجوم</div>
+    <div id="levelUpSub">الانتقال إلى المرحلة التالية...</div>
+  </div>
+
+  <!-- شاشة الإقلاع الشبيهة بالاختراق -->
+  <div id="bootScreen">
+    <div id="bootLines"></div>
+  </div>
+
+  <!-- شاشة الاختراق المزيف -->
+  <div id="breachOverlay">
+    <svg id="triangleWarn" viewBox="0 0 100 90">
+      <polygon points="50,5 95,85 5,85" fill="rgba(255,59,78,0.12)" stroke="#ff3b4e" stroke-width="4"/>
+      <text x="50" y="68" font-size="42" fill="#ff3b4e" text-anchor="middle" font-family="Arial" font-weight="bold">!</text>
+    </svg>
+    <div id="breachTitle">تم اختراق جهازك</div>
+    <div id="breachSub">يرجى عدم إغلاق التطبيق</div>
+    <div id="breachStatus">جارِ تفعيل نظام الدفاع...</div>
+  </div>
+
+  <!-- شاشة تفعيل الدفاع والعد التنازلي -->
+  <div id="defenseOverlay">
+    <div id="defenseTitle">تم تفعيل نظام الدفاع</div>
+    <div id="countdownNum"></div>
+  </div>
+
+  <div id="tapHint">اضغط بأي مكان لتظهر لوحة المفاتيح</div>
+  <input id="mobileInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+  <div id="noise"></div>
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
 </div>
 
 <script>
+(function(){
+"use strict";
+
+/* =========================================================
+   إعدادات عامة
+========================================================= */
 const WORDS = [
   "برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
   "دفاع","كود","ذاكرة","معالج","بروتوكول","منفذ","جدار","تحليل","تسجيل","دخول",
   "كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
   "خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"
 ];
+const BOOT_LINES = [
+  "جارِ الاتصال...", "جارِ فحص النظام...", "جارِ تحليل الملفات...",
+  "جارِ تجاوز الحماية...", "جارِ تحليل الذاكرة...", "تم العثور على ثغرة...",
+  "جارِ حقن الأوامر...", "جارِ السيطرة على النظام..."
+];
+const BEST_KEY = "wordSniperBestScore";
 
+/* =========================================================
+   نظام الصوت (يفشل بصمت إن لم تتوفر الملفات)
+========================================================= */
+const Sound = (() => {
+  const files = {
+    boot: "sounds/boot.mp3", alarm: "sounds/alarm.mp3",
+    explosion: "sounds/explosion.mp3", success: "sounds/success.mp3", fail: "sounds/fail.mp3"
+  };
+  const cache = {};
+  function play(name){
+    try{
+      if(!files[name]) return;
+      if(!cache[name]){
+        const a = new Audio(files[name]);
+        a.volume = 0.5;
+        a.onerror = () => { cache[name] = null; };
+        cache[name] = a;
+      }
+      if(cache[name]){
+        const inst = cache[name].cloneNode();
+        inst.volume = 0.5;
+        inst.play().catch(()=>{});
+      }
+    }catch(e){ /* تجاهل بصمت */ }
+  }
+  return { play };
+})();
+
+/* =========================================================
+   عناصر DOM
+========================================================= */
 const stage = document.getElementById('stage');
+const bgCanvas = document.getElementById('bgCanvas');
+const bctx = bgCanvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const levelEl = document.getElementById('level');
 const livesEl = document.getElementById('lives');
+const accuracyEl = document.getElementById('accuracyStat');
+const timeEl = document.getElementById('timeStat');
+const hud = document.getElementById('hud');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
+const coreEl = document.getElementById('core');
+const bootScreen = document.getElementById('bootScreen');
+const bootLinesEl = document.getElementById('bootLines');
+const breachOverlay = document.getElementById('breachOverlay');
+const defenseOverlay = document.getElementById('defenseOverlay');
+const countdownNum = document.getElementById('countdownNum');
+const levelUpOverlay = document.getElementById('levelUpOverlay');
+const mobileInput = document.getElementById('mobileInput');
+const noiseEl = document.getElementById('noise');
 
-let score = 0, lives = 3, level = 1;
-let words = []; // {el, text, typedCount, x, y, speed}
-let activeWord = null;
-let running = false;
-let spawnTimer = null;
-let stageW, stageH;
+/* =========================================================
+   خلفية المصفوفة المتحركة (Canvas خفيف الأداء)
+========================================================= */
+const matrixChars = '01アイウエオカキクケコ01ABCDEF#$%&{}[]<>/\\'.split('');
+let mCols = [], stageW = 0, stageH = 0;
+
+function resizeCanvas(){
+  stageW = stage.clientWidth; stageH = stage.clientHeight;
+  bgCanvas.width = stageW; bgCanvas.height = stageH;
+  const fontSize = 15;
+  const cols = Math.ceil(stageW / fontSize);
+  mCols = new Array(cols).fill(0).map(()=> Math.random()*-stageH);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function drawBg(){
+  const fontSize = 15;
+  bctx.fillStyle = 'rgba(3,5,10,0.14)';
+  bctx.fillRect(0,0,stageW,stageH);
+  bctx.font = fontSize+'px monospace';
+  for(let i=0;i<mCols.length;i++){
+    const ch = matrixChars[(Math.random()*matrixChars.length)|0];
+    const x = i*fontSize, y = mCols[i];
+    bctx.fillStyle = `rgba(63,232,201,${0.05+Math.random()*0.10})`;
+    bctx.fillText(ch, x, y);
+    mCols[i] += 0.55 + Math.random()*0.3;
+    if(mCols[i] > stageH + fontSize) mCols[i] = -fontSize*2;
+  }
+  requestAnimationFrame(drawBg);
+}
+
+/* =========================================================
+   حالة اللعبة
+========================================================= */
+let score=0, lives=3, level=1, wordsDestroyed=0, keysCorrect=0, keysTotal=0;
+let words=[], activeWord=null, running=false, spawnTimer=null;
+let startTime=0, timeTimer=null;
+
+function fmtTime(sec){
+  const m = String(Math.floor(sec/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${m}:${s}`;
+}
 
 function updateHud(){
   scoreEl.textContent = score;
   levelEl.textContent = level;
-  livesEl.textContent = "💠".repeat(Math.max(lives,0)) + "▫️".repeat(Math.max(3-lives,0));
+  livesEl.innerHTML = "";
+  for(let i=0;i<3;i++){
+    const d = document.createElement('span');
+    d.className = 'life-dot' + (i < lives ? '' : ' lost');
+    livesEl.appendChild(d);
+  }
+  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
+  accuracyEl.textContent = acc + '%';
 }
 
+function tickTime(){
+  if(!running) return;
+  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  timeEl.textContent = fmtTime(elapsed);
+}
+
+/* =========================================================
+   تشغيل الكلمات
+========================================================= */
 function spawnWord(){
   if(!running) return;
-  const text = WORDS[Math.floor(Math.random()*WORDS.length)];
+  const text = WORDS[(Math.random()*WORDS.length)|0];
   const el = document.createElement('div');
   el.className = 'word';
   el.innerHTML = `<span class="typed"></span><span class="rest">${text}</span>`;
   stage.appendChild(el);
-  stageW = stage.clientWidth; stageH = stage.clientHeight;
-  const x = Math.random() * (stageW - 140) + 20;
+  const x = Math.random() * (stageW - 150) + 20;
   el.style.left = x + 'px';
-  el.style.top = '-40px';
-  const speed = 0.4 + level * 0.12 + Math.random()*0.2;
-  words.push({el, text, typedCount:0, y:-40, speed});
+  el.style.top = '-46px';
+  requestAnimationFrame(()=> el.classList.add('in'));
+  const speed = 0.42 + level*0.11 + Math.random()*0.18;
+  words.push({el, text, typedCount:0, y:-46, speed});
+}
+
+function renderWordProgress(w){
+  w.el.querySelector('.typed').textContent = w.text.slice(0, w.typedCount);
+  w.el.querySelector('.rest').textContent = w.text.slice(w.typedCount);
 }
 
 function explode(w){
-  w.el.style.transition = 'transform 0.2s, opacity 0.2s';
-  w.el.style.transform = 'scale(1.6)';
+  const cx = parseFloat(w.el.style.left) + w.el.offsetWidth/2;
+  const cy = w.y + w.el.offsetHeight/2;
+  const colors = ['#ffb454','#7cf9e0','#3fe8c9'];
+  for(let i=0;i<14;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const c = colors[(Math.random()*colors.length)|0];
+    p.style.background = c; p.style.boxShadow = `0 0 8px ${c}`;
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    stage.appendChild(p);
+    const angle = Math.random()*Math.PI*2, dist = 30+Math.random()*60;
+    const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
+    const anim = p.animate([
+      {transform:'translate(0,0) scale(1)', opacity:1},
+      {transform:`translate(${dx}px,${dy}px) scale(0.15)`, opacity:0}
+    ], {duration:420+Math.random()*220, easing:'cubic-bezier(.2,.8,.3,1)'});
+    anim.onfinish = ()=> p.remove();
+  }
+  const ring = document.createElement('div');
+  ring.className = 'shockwave';
+  ring.style.left = cx+'px'; ring.style.top = cy+'px';
+  ring.style.width='8px'; ring.style.height='8px'; ring.style.marginLeft='-4px'; ring.style.marginTop='-4px';
+  stage.appendChild(ring);
+  const ringAnim = ring.animate([
+    {width:'8px',height:'8px',marginLeft:'-4px',marginTop:'-4px',opacity:.9,borderWidth:'2px'},
+    {width:'110px',height:'110px',marginLeft:'-55px',marginTop:'-55px',opacity:0,borderWidth:'0.5px'}
+  ], {duration:380, easing:'ease-out'});
+  ringAnim.onfinish = ()=> ring.remove();
+
+  w.el.style.transition = 'transform .18s ease-out, opacity .18s ease-out, filter .18s';
+  w.el.style.transform = 'scale(1.7)';
   w.el.style.opacity = '0';
-  setTimeout(()=> w.el.remove(), 200);
+  w.el.style.filter = 'brightness(2)';
+  setTimeout(()=> w.el.remove(), 180);
+
+  Sound.play('explosion');
   score += w.text.length * 10;
+  wordsDestroyed++;
   updateHud();
-  if(score > level * 300){
-    level++;
-    updateHud();
+  if(score > level*300){
+    levelUp();
   }
 }
 
 function loseLife(w){
   w.el.remove();
   lives--;
+  screenShake();
+  redFlashBrief();
   updateHud();
   if(lives <= 0){
-    endGame();
+    endGame(false);
   }
+}
+
+function screenShake(){
+  coreEl.classList.add('hit');
+  setTimeout(()=> coreEl.classList.remove('hit'), 260);
+}
+function redFlashBrief(){
+  noiseEl.style.background = 'rgba(255,59,78,0.18)';
+  noiseEl.style.opacity = '1';
+  setTimeout(()=>{ noiseEl.style.opacity = '0'; }, 130);
 }
 
 function gameLoop(){
   if(!running) return;
   words.forEach(w=>{
     w.y += w.speed;
-    w.el.style.top = w.y + 'px';
-    if(w.y > stageH - 90){
-      loseLife(w);
-    }
+    w.el.style.top = w.y+'px';
+    if(w.y > stageH - 100) loseLife(w);
   });
-  words = words.filter(w=> w.y <= stageH - 90);
-  if(running) requestAnimationFrame(gameLoop);
+  words = words.filter(w => w.y <= stageH - 100);
+  requestAnimationFrame(gameLoop);
 }
 
+/* =========================================================
+   الكتابة (كيبورد فعلي + إدخال جوال)
+========================================================= */
 function handleKey(e){
   if(!running) return;
   const key = e.key;
   if(key.length !== 1 || !/[\u0621-\u064A]/.test(key)) return;
-  const k = key;
 
-  if(activeWord && !words.includes(activeWord)){
-    activeWord = null;
-  }
+  if(activeWord && !words.includes(activeWord)) activeWord = null;
 
   if(activeWord){
-    if(activeWord.text[activeWord.typedCount] === k){
+    keysTotal++;
+    if(activeWord.text[activeWord.typedCount] === key){
+      keysCorrect++;
       activeWord.typedCount++;
       renderWordProgress(activeWord);
       if(activeWord.typedCount === activeWord.text.length){
@@ -228,71 +484,184 @@ function handleKey(e){
         activeWord = null;
       }
     }
+    updateHud();
     return;
   }
 
-  // find a word starting with k, closest to core
-  let candidates = words.filter(w => w.text[0] === k);
+  const candidates = words.filter(w => w.text[0] === key);
   if(candidates.length === 0) return;
+  keysTotal++; keysCorrect++;
   candidates.sort((a,b)=> b.y - a.y);
   activeWord = candidates[0];
-  activeWord.typedCount = 1;
   activeWord.el.classList.add('locked');
+  activeWord.typedCount = 1;
   renderWordProgress(activeWord);
+  updateHud();
   if(activeWord.typedCount === activeWord.text.length){
     explode(activeWord);
     words = words.filter(w=>w!==activeWord);
     activeWord = null;
   }
 }
+window.addEventListener('keydown', handleKey);
 
-function renderWordProgress(w){
-  const typedSpan = w.el.querySelector('.typed');
-  const restSpan = w.el.querySelector('.rest');
-  typedSpan.textContent = w.text.slice(0, w.typedCount);
-  restSpan.textContent = w.text.slice(w.typedCount);
-}
+mobileInput.addEventListener('input', ()=>{
+  const val = mobileInput.value;
+  for(const ch of val) handleKey({key: ch});
+  mobileInput.value = '';
+});
+stage.addEventListener('touchstart', ()=> running && mobileInput.focus());
+stage.addEventListener('click', ()=> running && mobileInput.focus());
 
+/* =========================================================
+   إدارة المراحل (بداية / صعود مستوى / نهاية)
+========================================================= */
 function startGame(){
-  score = 0; lives = 3; level = 1;
-  words.forEach(w=>w.el.remove());
-  words = [];
+  score=0; lives=3; level=1; wordsDestroyed=0; keysCorrect=0; keysTotal=0;
+  words.forEach(w=>w.el.remove()); words = [];
   activeWord = null;
   updateHud();
-  overlay.style.display = 'none';
+  hud.classList.add('show');
   running = true;
+  startTime = Date.now();
+  clearInterval(timeTimer); timeTimer = setInterval(tickTime, 500);
   clearInterval(spawnTimer);
-  spawnTimer = setInterval(()=>{
-    spawnWord();
-  }, Math.max(1600 - level*80, 700));
+  spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
   requestAnimationFrame(gameLoop);
 }
 
-function endGame(){
+function levelUp(){
+  level++;
+  updateHud();
   running = false;
   clearInterval(spawnTimer);
-  words.forEach(w=>w.el.remove());
-  words = [];
-  overlay.style.display = 'flex';
-  overlay.innerHTML = `
-    <h1>انتهت اللعبة</h1>
-    <div class="stat">نقاطك: ${score} — المستوى: ${level}</div>
-    <p>جرب مرة ثانية وكسر رقمك.</p>
-    <button id="startBtn">إعادة اللعب</button>
-  `;
-  document.getElementById('startBtn').addEventListener('click', startGame);
+  levelUpOverlay.style.display = 'flex';
+  setTimeout(()=>{
+    levelUpOverlay.style.display = 'none';
+    running = true;
+    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
+  }, 1400);
 }
 
-startBtn.addEventListener('click', startGame);
-window.addEventListener('keydown', handleKey);
+function endGame(won){
+  running = false;
+  clearInterval(spawnTimer);
+  clearInterval(timeTimer);
+  words.forEach(w=>w.el.remove()); words = [];
+  hud.classList.remove('show');
 
-// re-adjust spawn rate as level changes
+  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
+  const best = Math.max(score, parseInt(localStorage.getItem(BEST_KEY) || '0', 10));
+  localStorage.setItem(BEST_KEY, best);
+
+  Sound.play(won ? 'success' : 'fail');
+
+  overlay.querySelector('.panel').innerHTML = `
+    <h1 class="danger">تم اختراق نظام الدفاع</h1>
+    <p>فشل احتواء الهجوم. راجع إحصائياتك أدناه وحاول مجددًا.</p>
+    <div id="statsGrid">
+      <div class="glass box"><div class="lbl">النقاط</div><div class="val">${score}</div></div>
+      <div class="glass box"><div class="lbl">المستوى</div><div class="val">${level}</div></div>
+      <div class="glass box"><div class="lbl">الدقة</div><div class="val">${acc}%</div></div>
+      <div class="glass box"><div class="lbl">الزمن</div><div class="val">${fmtTime(elapsed)}</div></div>
+      <div class="glass box"><div class="lbl">كلمات مُدمرة</div><div class="val">${wordsDestroyed}</div></div>
+      <div class="glass box"><div class="lbl">أفضل نتيجة</div><div class="val">${best}</div></div>
+    </div>
+    <button id="startBtn">إعادة المهمة</button>
+  `;
+  overlay.style.display = 'flex';
+  document.getElementById('startBtn').addEventListener('click', beginSequence);
+}
+
+/* =========================================================
+   المقدمة السينمائية: الإقلاع -> الاختراق المزيف -> الدفاع -> عد تنازلي
+========================================================= */
+function typeLine(el, text, speed){
+  return new Promise(resolve=>{
+    let i = 0;
+    el.style.opacity = '1';
+    const interval = setInterval(()=>{
+      el.textContent = text.slice(0,i);
+      i++;
+      if(i > text.length){
+        clearInterval(interval);
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+async function playBootSequence(){
+  bootScreen.style.display = 'block';
+  bootLinesEl.innerHTML = '';
+  Sound.play('boot');
+  for(const line of BOOT_LINES){
+    const div = document.createElement('div');
+    div.className = 'line';
+    bootLinesEl.appendChild(div);
+    await typeLine(div, line, 26);
+    await new Promise(r=> setTimeout(r, 90));
+  }
+  await new Promise(r=> setTimeout(r, 250));
+  bootScreen.classList.add('glitch');
+  Sound.play('alarm');
+  await new Promise(r=> setTimeout(r, 500));
+  bootScreen.classList.remove('glitch');
+  bootScreen.style.display = 'none';
+}
+
+async function playBreachSequence(){
+  breachOverlay.style.display = 'flex';
+  breachOverlay.classList.add('flash');
+  await new Promise(r=> setTimeout(r, 2400));
+  breachOverlay.classList.remove('flash');
+  breachOverlay.style.display = 'none';
+}
+
+async function playDefenseSequence(){
+  defenseOverlay.style.display = 'flex';
+  countdownNum.textContent = '';
+  await new Promise(r=> setTimeout(r, 900));
+  for(const n of ['٣','٢','١']){
+    countdownNum.textContent = n;
+    countdownNum.style.animation = 'none';
+    void countdownNum.offsetWidth;
+    countdownNum.style.animation = 'fadeUp .4s ease';
+    await new Promise(r=> setTimeout(r, 650));
+  }
+  defenseOverlay.style.display = 'none';
+}
+
+async function beginSequence(){
+  overlay.style.display = 'none';
+  resizeCanvas();
+  await playBootSequence();
+  await playBreachSequence();
+  await playDefenseSequence();
+  startGame();
+  mobileInput.focus();
+}
+
+startBtn.addEventListener('click', beginSequence);
+
+/* =========================================================
+   إعادة ضبط سرعة التوليد عند تغيّر المستوى
+========================================================= */
 setInterval(()=>{
   if(running){
     clearInterval(spawnTimer);
-    spawnTimer = setInterval(spawnWord, Math.max(1600 - level*80, 700));
+    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
   }
 }, 3000);
+
+/* =========================================================
+   تشغيل الخلفية المتحركة دائمًا
+========================================================= */
+resizeCanvas();
+requestAnimationFrame(drawBg);
+
+})();
 </script>
 </body>
 </html>
