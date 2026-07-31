@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>قناص الكلمات</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#03050a">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
   :root{
     --void:#03050a; --void2:#070c16; --void3:#0c1424;
@@ -79,28 +82,58 @@
   .word.locked{ border-color:var(--amber); box-shadow:0 0 18px rgba(255,180,84,.4); }
   .word.danger{ border-color:var(--danger); box-shadow:0 0 16px rgba(255,59,78,.35); }
 
-  /* ===== شاشة الإقلاع (اختراق) ===== */
-  #bootScreen{ position:absolute; inset:0; z-index:50; background:#000; display:none;
-    font-family:'Courier New',monospace; padding:8vh 6vw; color:#39ff9e; }
-  #bootLines{ font-size:15px; line-height:2; text-shadow:0 0 8px rgba(57,255,158,.6);}
-  #bootLines .line{ opacity:0;}
-  #bootScreen.glitch{ animation: hardGlitch .5s steps(2) 3; }
-  @keyframes hardGlitch{
-    0%{ transform:translate(0,0); filter:none;}
-    20%{ transform:translate(-6px,3px); filter:hue-rotate(40deg) saturate(3);}
-    40%{ transform:translate(5px,-4px); filter:invert(0.15);}
-    60%{ transform:translate(-4px,-3px); filter:hue-rotate(-30deg);}
-    80%{ transform:translate(6px,2px); filter:none;}
-    100%{ transform:translate(0,0); filter:none;}
-  }
+  /* ===== مشهد استيقاظ مركز القيادة (بديل شاشة النصوص الطويلة) ===== */
+  #awakenScene{ position:absolute; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 50%, #061018, #020408 78%);
+    opacity:0; transition:opacity .6s ease; overflow:hidden; }
+  #awakenScene.show{ opacity:1; }
+  #awakenScene.fadeOut{ opacity:0; }
+  #awakenCore{ position:relative; width:280px; height:280px; }
+  #awakenCore svg{ width:100%; height:100%; overflow:visible; }
+  .awakenRing{ fill:none; stroke:rgba(63,232,201,0.22); stroke-width:1; }
+  .awakenRingActive{ fill:none; stroke:var(--core); stroke-width:1.6; stroke-linecap:round;
+    stroke-dasharray:600; stroke-dashoffset:600; filter:drop-shadow(0 0 6px rgba(63,232,201,.7));
+    animation: ringDraw 1.8s cubic-bezier(.4,0,.2,1) forwards; }
+  .awakenRingActive.r2{ animation-delay:.25s; stroke:var(--amber); filter:drop-shadow(0 0 6px rgba(255,180,84,.7)); }
+  .awakenRingActive.r3{ animation-delay:.5s; }
+  @keyframes ringDraw{ to{ stroke-dashoffset:0; } }
+  .awakenSpin{ transform-origin:140px 140px; animation:spinSlow 9s linear infinite; }
+  .awakenSpin.rev{ animation-direction:reverse; animation-duration:13s; }
+  @keyframes spinSlow{ to{ transform:rotate(360deg); } }
+  .awakenNode{ fill:var(--dim2); transition:fill .35s ease; }
+  .awakenNode.on{ fill:var(--core); filter:drop-shadow(0 0 5px var(--core)); }
+  #awakenCenterMark{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  #awakenCenterMark svg{ width:46px; height:46px; opacity:0; transform:scale(0.5);
+    transition:opacity .5s ease, transform .5s cubic-bezier(.2,1.4,.4,1); }
+  #awakenCenterMark svg.show{ opacity:1; transform:scale(1); }
+  #awakenLabel{ position:absolute; bottom:16%; left:50%; transform:translateX(-50%); text-align:center;
+    font-size:14px; letter-spacing:4px; color:var(--core2); text-shadow:0 0 12px rgba(63,232,201,.6);
+    opacity:0; transition:opacity .35s ease; white-space:nowrap; }
+  #awakenLabel.show{ opacity:1; }
 
   #breachOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
-    flex-direction:column; background:rgba(10,2,4,0.55); opacity:0; transition:opacity .5s ease; }
+    flex-direction:column; background:rgba(10,2,4,0.55); opacity:0; transition:opacity .5s ease; overflow:hidden; }
   #breachOverlay.show{ opacity:1; }
-  #radarWrap{ width:180px; height:180px; margin-bottom:22px; filter:drop-shadow(0 0 18px rgba(255,59,78,.45));
+  #breachContent{ display:flex; flex-direction:column; align-items:center; position:relative; z-index:2;
+    transform:scale(1.08); transition:transform 3.2s cubic-bezier(.16,.6,.3,1); }
+  #breachOverlay.show #breachContent{ transform:scale(1); }
+  #emberField{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .ember{ position:absolute; bottom:-10px; width:3px; height:3px; border-radius:50%; background:#ff8291;
+    box-shadow:0 0 6px 1px rgba(255,59,78,.8); opacity:0; animation-name:emberRise; animation-timing-function:ease-out; animation-iteration-count:infinite; }
+  @keyframes emberRise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:.9; }
+    90%{ opacity:.4; }
+    100%{ transform:translateY(-70vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+  #radarWrap{ width:180px; height:180px; margin-bottom:22px; filter:drop-shadow(0 0 18px rgba(255,59,78,.45)); position:relative;
     opacity:0; transform:scale(0.7); transition:opacity .6s cubic-bezier(.2,1.4,.4,1), transform .6s cubic-bezier(.2,1.4,.4,1); }
   #breachOverlay.show #radarWrap{ opacity:1; transform:scale(1); }
-  #radarSvg{ width:100%; height:100%; }
+  #radarWrap::before, #radarWrap::after{ content:''; position:absolute; inset:0; border-radius:50%;
+    border:1.5px solid rgba(255,59,78,0.55); animation: radarPing 2.6s ease-out infinite; }
+  #radarWrap::after{ animation-delay:1.3s; }
+  @keyframes radarPing{ 0%{ transform:scale(0.55); opacity:.9; } 100%{ transform:scale(1.35); opacity:0; } }
+  #radarSvg{ width:100%; height:100%; position:relative; z-index:2; }
   .radarRing{ fill:none; stroke:rgba(255,59,78,0.35); stroke-width:1; }
   .radarCross{ stroke:rgba(255,59,78,0.2); stroke-width:1; }
   #radarSweep{ transform-origin:100px 100px; animation: sweepSpin 2.4s linear infinite; }
@@ -153,6 +186,9 @@
     border:1px solid var(--core); color:var(--core2); font-size:14.5px; letter-spacing:1px;
     padding:12px 30px; border-radius:8px; cursor:pointer; transition:all .2s;}
   button:hover{ background:rgba(63,232,201,0.26); box-shadow:0 0 18px rgba(63,232,201,.4);}
+  #installBtn{ display:block; width:100%; background:rgba(255,180,84,0.08); border-color:var(--amber);
+    color:var(--amber2); font-size:12.5px; padding:10px 20px; }
+  #installBtn:hover{ background:rgba(255,180,84,0.18); box-shadow:0 0 14px rgba(255,180,84,.35); }
 
   /* ===== انتقال المستوى ===== */
   #levelUpOverlay{ position:absolute; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
@@ -174,7 +210,7 @@
     #breachTitle{ font-size:28px;} #defenseTitle{ font-size:22px;} #countdownNum{ font-size:64px;}
     button{ font-size:13px; padding:10px 24px;}
     #tapHint{ display:block;}
-    #bootLines{ font-size:12px;}
+    #awakenCore{ width:200px; height:200px;} #awakenLabel{ font-size:12px; letter-spacing:2px;}
     #comboNum{ font-size:24px;}
   }
 </style>
@@ -226,6 +262,7 @@
       <h1>قناص الكلمات</h1>
       <p>خادم تحت المراقبة يتعرض لمحاولة هجوم. كلمات تمثل حزم اختراق تنزل نحو نواة الدفاع — اكتبها حرفًا بحرف بالترتيب لصدها قبل وصولها. الكلمة المضيئة (البرتقالية) هي التي تكتب فيها حاليًا. سلسلة الإصابات المتتالية ترفع مضاعف نقاطك.</p>
       <button id="startBtn">دخول غرفة العمليات</button>
+      <button id="installBtn" style="display:none; margin-top:10px;">📲 تثبيت التطبيق على الهاتف</button>
     </div>
   </div>
 
@@ -235,37 +272,72 @@
     <div id="levelUpSub">الانتقال إلى المرحلة التالية...</div>
   </div>
 
-  <!-- شاشة الإقلاع الشبيهة بالاختراق -->
-  <div id="bootScreen">
-    <div id="bootLines"></div>
+  <!-- مشهد استيقاظ مركز القيادة (بصري بحت، بدون نصوص طويلة) -->
+  <div id="awakenScene">
+    <div id="awakenCore">
+      <svg viewBox="0 0 280 280">
+        <circle cx="140" cy="140" r="120" class="awakenRing"/>
+        <circle cx="140" cy="140" r="90" class="awakenRing"/>
+        <circle cx="140" cy="140" r="60" class="awakenRing"/>
+        <g class="awakenSpin">
+          <circle cx="140" cy="140" r="120" class="awakenRingActive r1"/>
+        </g>
+        <g class="awakenSpin rev">
+          <circle cx="140" cy="140" r="90" class="awakenRingActive r2"/>
+        </g>
+        <g class="awakenSpin">
+          <circle cx="140" cy="140" r="60" class="awakenRingActive r3"/>
+        </g>
+        <g id="awakenNodes">
+          <circle class="awakenNode" cx="140" cy="20" r="4"/>
+          <circle class="awakenNode" cx="230" cy="70" r="4"/>
+          <circle class="awakenNode" cx="260" cy="140" r="4"/>
+          <circle class="awakenNode" cx="230" cy="210" r="4"/>
+          <circle class="awakenNode" cx="140" cy="260" r="4"/>
+          <circle class="awakenNode" cx="50" cy="210" r="4"/>
+          <circle class="awakenNode" cx="20" cy="140" r="4"/>
+          <circle class="awakenNode" cx="50" cy="70" r="4"/>
+        </g>
+      </svg>
+      <div id="awakenCenterMark">
+        <svg viewBox="0 0 120 60">
+          <polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="4"/>
+          <circle cx="60" cy="40" r="7" fill="#3fe8c9"/>
+        </svg>
+      </div>
+    </div>
+    <div id="awakenLabel"></div>
   </div>
 
   <!-- شاشة الاختراق المزيف -->
   <div id="breachOverlay">
-    <div id="radarWrap">
-      <svg id="radarSvg" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="90" class="radarRing r1"/>
-        <circle cx="100" cy="100" r="62" class="radarRing r2"/>
-        <circle cx="100" cy="100" r="34" class="radarRing r3"/>
-        <line x1="100" y1="10" x2="100" y2="190" class="radarCross"/>
-        <line x1="10" y1="100" x2="190" y2="100" class="radarCross"/>
-        <g id="radarSweep">
-          <path d="M100,100 L100,10 A90,90 0 0,1 163,37 Z" fill="url(#sweepGrad)"/>
-        </g>
-        <defs>
-          <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#ff3b4e" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="#ff3b4e" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <circle cx="145" cy="60" r="5" class="radarBlip b1"/>
-        <circle cx="60" cy="140" r="4" class="radarBlip b2"/>
-      </svg>
+    <div id="emberField"></div>
+    <div id="breachContent">
+      <div id="radarWrap">
+        <svg id="radarSvg" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="90" class="radarRing r1"/>
+          <circle cx="100" cy="100" r="62" class="radarRing r2"/>
+          <circle cx="100" cy="100" r="34" class="radarRing r3"/>
+          <line x1="100" y1="10" x2="100" y2="190" class="radarCross"/>
+          <line x1="10" y1="100" x2="190" y2="100" class="radarCross"/>
+          <g id="radarSweep">
+            <path d="M100,100 L100,10 A90,90 0 0,1 163,37 Z" fill="url(#sweepGrad)"/>
+          </g>
+          <defs>
+            <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ff3b4e" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="#ff3b4e" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <circle cx="145" cy="60" r="5" class="radarBlip b1"/>
+          <circle cx="60" cy="140" r="4" class="radarBlip b2"/>
+        </svg>
+      </div>
+      <div id="simBadge2">🛡️ محاكاة تدريبية</div>
+      <div id="breachTitle">تنبيه: هجوم قادم على الخادم المراقَب</div>
+      <div id="breachSub">أنت مسؤول العمليات — لا تغلق الشاشة</div>
+      <div id="breachStatus">جارِ تفعيل نظام الصد...</div>
     </div>
-    <div id="simBadge2">🛡️ محاكاة تدريبية</div>
-    <div id="breachTitle">تنبيه: هجوم قادم على الخادم المراقَب</div>
-    <div id="breachSub">أنت مسؤول العمليات — لا تغلق الشاشة</div>
-    <div id="breachStatus">جارِ تفعيل نظام الصد...</div>
   </div>
 
   <!-- شاشة تفعيل الدفاع والعد التنازلي -->
@@ -296,12 +368,7 @@ const WORDS = [
   "كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
   "خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"
 ];
-const BOOT_LINES = [
-  "جارِ الاتصال بغرفة العمليات...", "جارِ تحميل بروتوكولات الدفاع...",
-  "جارِ مزامنة مستشعرات الشبكة...", "جارِ تهيئة نواة الصد...",
-  "جارِ ربط الاتصال بالخادم المراقَب...", "تم رصد نشاط غير معتاد على الخادم...",
-  "جارِ تصعيد مستوى التأهب...", "النظام جاهز — بانتظار قائد العمليات..."
-];
+const AWAKEN_LABELS = ["تم التحقق", "تم التأمين", "جاهز"];
 const BEST_KEY = "wordSniperBestScore";
 
 /* =========================================================
@@ -343,166 +410,137 @@ function applyTierClass(){
 applyTierClass();
 
 /* =========================================================
-   محرك الصوت السينمائي — Web Audio API مُصنَّع بالكامل
-   (يبني كل الأصوات رياضياً: نغمات، ضوضاء، فلاتر — لا ملفات خارجية)
+   محرك الصوت — مُركّب بالكامل عبر Web Audio API (بدون أي ملفات خارجية)
+   يغطي كل حدث بصري بالعبة بصوت مطابق: الإقلاع، التنبيه، العد التنازلي،
+   الكتابة، الانفجار، خسارة الروح، صعود المستوى، نهاية اللعبة.
 ========================================================= */
-const Sound = (() => {
-  let ctx = null;
-  let master = null;
-  let unlocked = false;
+/* =========================================================
+   Audio Manager احترافي — Web Audio API
+   يحمّل مسبقاً فقط الملفات الحقيقية المرفقة (sounds/*)
+   لا يوجد أي مرجع أو صوت من النظام القديم — حُذف بالكامل
+========================================================= */
+const SOUND_FILES = {
+  waitingLoop:  { src:'sounds/waiting-loop.mp3',   volume:0.35 },
+  hackStart:    { src:'sounds/hack-start.mp3',     volume:0.7  },
+  hackStatic:   { src:'sounds/hack-static.mp3',    volume:0.55 },
+  hackEnd:      { src:'sounds/hack-end.mp3',       volume:0.7  },
+  glitchAmbient:{ src:'sounds/glitch-ambient.mp3', volume:0.16 },
+  glitchEffect: { src:'sounds/glitch-effect.mp3',  volume:0.6  },
+  alarm:        { src:'sounds/alarm.mp3',          volume:0.4  },
+  count1:       { src:'sounds/count-1.ogg',        volume:0.85 },
+  count2:       { src:'sounds/count-2.ogg',        volume:0.85 },
+  count3:       { src:'sounds/count-3.ogg',        volume:0.85 },
+  kickImpact:   { src:'sounds/kick-impact.mp3',    volume:0.8  },
+  whoosh:       { src:'sounds/whoosh.mp3',         volume:0.55 },
+  uiHit:        { src:'sounds/ui-hit.mp3',         volume:0.5  },
+  boom:         { src:'sounds/boom.mp3',           volume:0.55 },
+  heartbeat:    { src:'sounds/heartbeat.mp3',      volume:0.3  },
+  error:        { src:'sounds/error.mp3',          volume:0.6  },
+  victory:      { src:'sounds/victory.mp3',        volume:0.65 }
+};
+
+const AudioMgr = (() => {
+  let ctx = null, master = null;
+  const buffers = {};
+  const activeLoops = {}; // name -> {source, gain}
+  let unlocked = false, loaded = false;
 
   function ensureCtx(){
-    if(ctx) return ctx;
-    try{
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      ctx = new AC();
       master = ctx.createGain();
-      master.gain.value = 0.55;
+      master.gain.value = 1;
       master.connect(ctx.destination);
-    }catch(e){ ctx = null; }
+    }
+    if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
     return ctx;
   }
+
+  let loadingPromise = null;
+  async function preloadAll(){
+    if(loadingPromise) return loadingPromise;
+    const c = ensureCtx(); if(!c) return;
+    const entries = Object.entries(SOUND_FILES);
+    loadingPromise = Promise.all(entries.map(async ([name, cfg])=>{
+      try{
+        const res = await fetch(cfg.src);
+        const arr = await res.arrayBuffer();
+        buffers[name] = await c.decodeAudioData(arr);
+      }catch(e){ /* ملف مفقود بالاستضافة: يُتجاهل بصمت بدون كسر اللعبة */ }
+    })).then(()=>{ loaded = true; });
+    return loadingPromise;
+  }
+
   function unlock(){
     if(unlocked) return;
-    const c = ensureCtx();
-    if(c && c.state === 'suspended') c.resume();
     unlocked = true;
+    ensureCtx();
+    if(!loaded) preloadAll();
   }
-  window.addEventListener('pointerdown', unlock, { once:true });
-  window.addEventListener('keydown', unlock, { once:true });
+  ['pointerdown','keydown','touchstart'].forEach(ev=>
+    window.addEventListener(ev, unlock, { once:true, passive:true })
+  );
 
-  function now(){ return ctx.currentTime; }
-
-  function osc(type, freq, t0, dur, gainPeak, opts={}){
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, t0);
-    if(opts.freqEnd !== undefined){
-      o.frequency.exponentialRampToValueAtTime(Math.max(opts.freqEnd,1), t0+dur);
-    }
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(gainPeak, t0 + (opts.attack || 0.008));
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    o.connect(g);
-    let node = g;
-    if(opts.filterFreq){
-      const f = ctx.createBiquadFilter();
-      f.type = opts.filterType || 'lowpass';
-      f.frequency.value = opts.filterFreq;
-      g.connect(f);
-      node = f;
-    }
-    node.connect(master);
-    o.start(t0);
-    o.stop(t0 + dur + 0.05);
-    return o;
-  }
-
-  function noiseBurst(t0, dur, gainPeak, opts={}){
-    const bufSize = ctx.sampleRate * dur;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for(let i=0;i<bufSize;i++){ data[i] = (Math.random()*2-1) * (1 - i/bufSize); }
-    const src = ctx.createBufferSource();
+  // تشغيل صوت لمرة واحدة (One-shot) — مع تنويع طفيف بالـ pitch لتفادي التكرار الممل
+  function play(name, { rateJitter=0.04, gainMul=1, delay=0 } = {}){
+    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
+    if(!c || !buf || !cfg) return null;
+    const src = c.createBufferSource();
     src.buffer = buf;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(gainPeak, t0 + (opts.attack || 0.005));
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    const f = ctx.createBiquadFilter();
-    f.type = opts.filterType || 'bandpass';
-    f.frequency.value = opts.filterFreq || 1800;
-    f.Q.value = opts.q || 0.9;
-    src.connect(f); f.connect(g); g.connect(master);
-    src.start(t0);
-    src.stop(t0 + dur + 0.02);
+    src.playbackRate.value = 1 + (Math.random()*2-1)*rateJitter;
+    const gain = c.createGain();
+    gain.gain.value = cfg.volume * gainMul;
+    src.connect(gain).connect(master);
+    src.start(c.currentTime + delay);
+    return src;
   }
 
-  const fx = {
-    boot(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('square', 1450, t, 0.028, 0.05, { filterFreq:2400 });
-    },
-    alarm(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('sawtooth', 220, t, 0.55, 0.10, { freqEnd:880, filterFreq:1600, attack:0.02 });
-      osc('sawtooth', 216, t, 0.55, 0.08, { freqEnd:860, filterFreq:1400, attack:0.02 });
-      noiseBurst(t, 0.5, 0.05, { filterFreq:3000, q:0.6 });
-    },
-    radarPing(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('sine', 1200, t, 0.35, 0.06, { freqEnd:700, filterFreq:2200 });
-    },
-    countBeep(pitch){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('square', pitch, t, 0.14, 0.09, { filterFreq:2600 });
-    },
-    go(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('sawtooth', 440, t, 0.32, 0.11, { freqEnd:1760, filterFreq:3200, attack:0.01 });
-      noiseBurst(t, 0.15, 0.06, { filterFreq:4000, q:0.7 });
-    },
-    hit(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('square', 1900 + Math.random()*220, t, 0.045, 0.045, { filterFreq:5000, attack:0.002 });
-    },
-    miss(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('sawtooth', 180, t, 0.16, 0.07, { freqEnd:90, filterFreq:900 });
-    },
-    explosion(mult){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      const m = Math.min(mult||1, 4);
-      osc('sine', 130, t, 0.22 + m*0.04, 0.14 + m*0.03, { freqEnd:38, attack:0.004 });
-      noiseBurst(t, 0.18 + m*0.03, 0.09 + m*0.02, { filterFreq:2600 - m*200, q:0.8 });
-      if(m >= 3){
-        osc('sine', 2200, t+0.01, 0.09, 0.05, { freqEnd:3200, filterFreq:5000 });
-      }
-    },
-    coreHit(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      osc('sawtooth', 90, t, 0.4, 0.16, { freqEnd:40, filterFreq:700 });
-      noiseBurst(t, 0.3, 0.11, { filterFreq:600, q:0.5 });
-    },
-    levelUp(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=>{
-        osc('triangle', f, t + i*0.09, 0.22, 0.09, { filterFreq:4000, attack:0.005 });
-      });
-    },
-    success(){
-      fx.levelUp();
-    },
-    fail(){
-      const c = ensureCtx(); if(!c) return;
-      const t = now();
-      [392, 349.23, 261.63].forEach((f,i)=>{
-        osc('sawtooth', f, t + i*0.16, 0.5, 0.10, { freqEnd:f*0.5, filterFreq:900 });
-      });
-      noiseBurst(t, 0.6, 0.06, { filterFreq:500, q:0.5 });
+  // تشغيل حلقة مستمرة (Loop) بدخول تدريجي — للأجواء الخلفية (Ambient)
+  function playLoop(name, { fadeInDur=1.2, gainMul=1 } = {}){
+    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
+    if(!c || !buf || !cfg) return;
+    stopLoop(name, 0);
+    const src = c.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const gain = c.createGain();
+    const target = cfg.volume * gainMul;
+    gain.gain.setValueAtTime(0.0001, c.currentTime);
+    gain.gain.linearRampToValueAtTime(target, c.currentTime + fadeInDur);
+    src.connect(gain).connect(master);
+    src.start(0);
+    activeLoops[name] = { source:src, gain, target };
+  }
+
+  function stopLoop(name, fadeOutDur=0.8){
+    const l = activeLoops[name]; if(!l) return;
+    const c = ensureCtx();
+    if(c && fadeOutDur > 0){
+      l.gain.gain.cancelScheduledValues(c.currentTime);
+      l.gain.gain.setValueAtTime(l.gain.gain.value, c.currentTime);
+      l.gain.gain.linearRampToValueAtTime(0.0001, c.currentTime + fadeOutDur);
+      const src = l.source;
+      setTimeout(()=>{ try{ src.stop(); }catch(e){} }, fadeOutDur*1000 + 60);
+    } else {
+      try{ l.source.stop(); }catch(e){}
     }
-  };
-
-  function play(name, arg){
-    try{
-      if(!fx[name]) return;
-      ensureCtx();
-      if(ctx && ctx.state === 'suspended') ctx.resume();
-      fx[name](arg);
-    }catch(e){ /* تجاهل بصمت */ }
+    delete activeLoops[name];
   }
 
-  return { play };
+  // تشغيل جزء مقصوص فقط من ملف طويل (offset/duration) — مفيد للـ kick القصير من ملف أطول
+  function playClip(name, offset=0, duration=1.0, gainMul=1){
+    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
+    if(!c || !buf || !cfg) return;
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const gain = c.createGain();
+    gain.gain.value = cfg.volume * gainMul;
+    src.connect(gain).connect(master);
+    src.start(c.currentTime, offset, duration);
+  }
+
+  return { unlock, preloadAll, play, playLoop, stopLoop, playClip, get isLoaded(){return loaded;} };
 })();
 
 /* =========================================================
@@ -523,12 +561,15 @@ const hud = document.getElementById('hud');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
 const coreEl = document.getElementById('core');
-const bootScreen = document.getElementById('bootScreen');
-const bootLinesEl = document.getElementById('bootLines');
+const awakenScene = document.getElementById('awakenScene');
+const awakenLabel = document.getElementById('awakenLabel');
+const awakenCenterMark = document.querySelector('#awakenCenterMark svg');
+const awakenNodes = document.querySelectorAll('.awakenNode');
 const breachOverlay = document.getElementById('breachOverlay');
 const breachTitle = document.getElementById('breachTitle');
 const breachSub = document.getElementById('breachSub');
 const breachStatus = document.getElementById('breachStatus');
+const emberField = document.getElementById('emberField');
 const defenseOverlay = document.getElementById('defenseOverlay');
 const countdownNum = document.getElementById('countdownNum');
 const levelUpOverlay = document.getElementById('levelUpOverlay');
@@ -548,7 +589,7 @@ let mCols = [], stageW = 0, stageH = 0;
 function resizeCanvases(){
   stageW = stage.clientWidth; stageH = stage.clientHeight;
   const dpr = Quality.cfg.dpr;
-  const bgDpr = Math.min(dpr, 1);
+  const bgDpr = Math.min(dpr, 1); // خلفية زخرفية، دقة retina كاملة غير ضرورية وتكلف أداء كبير
   bgCanvas.width = stageW * bgDpr; bgCanvas.height = stageH * bgDpr;
   bgCanvas.style.width = stageW+'px'; bgCanvas.style.height = stageH+'px';
   fxCanvas.width = stageW * dpr; fxCanvas.height = stageH * dpr;
@@ -582,8 +623,9 @@ function drawBg(){
 const Particles = (() => {
   const pool = [];
   const active = [];
-  function ease(t){ return 1 - Math.pow(1-t, 3); }
+  function ease(t){ return 1 - Math.pow(1-t, 3); } // easeOutCubic
 
+  // sprites glow جاهزة مسبقاً بدل shadowBlur (رسم مسبق مرة واحدة فقط، ثم drawImage السريع)
   const glowSprites = {};
   function getGlowSprite(color){
     if(glowSprites[color]) return glowSprites[color];
@@ -761,7 +803,7 @@ function spawnWord(){
   const x = Math.random() * (stageW - 150) + 20;
   el.style.transform = `translate3d(${x}px,-46px,0)`;
   requestAnimationFrame(()=> el.classList.add('in'));
-  const speed = (0.42 + level*0.11 + Math.random()*0.18) * 0.06;
+  const speed = (0.42 + level*0.11 + Math.random()*0.18) * 0.06; // px/ms
   words.push({el, text, x, typedCount:0, y:-46, speed, danger:false, hitUntil:0});
 }
 
@@ -797,12 +839,8 @@ function explode(w){
   });
 
   Shake.trigger(2.5 + mult*1.4);
-  Sound.play('explosion', mult);
-
-  if(mult >= 3){
-    running = false;
-    setTimeout(()=>{ running = true; }, 55);
-  }
+  AudioMgr.play('boom', { gainMul: 0.7 + mult*0.08 });
+  AudioMgr.play('uiHit', { gainMul:0.5, rateJitter:0.1 });
 
   registerHit();
   const mNow = multiplierFor(combo);
@@ -821,8 +859,12 @@ function loseLife(w){
   resetCombo();
   Shake.trigger(9);
   redFlashBrief();
+  AudioMgr.play('error');
+  if(lives === 1) AudioMgr.playLoop('heartbeat', { fadeInDur:0.6 });
+  else AudioMgr.stopLoop('heartbeat', 0.5);
   updateHud();
   if(lives <= 0){
+    AudioMgr.stopLoop('heartbeat', 0.4);
     endGame(false);
   }
 }
@@ -832,7 +874,6 @@ function screenShakeCoreHit(){
   setTimeout(()=> coreEl.classList.remove('hit'), 260);
 }
 function redFlashBrief(){
-  Sound.play('coreHit');
   screenShakeCoreHit();
   flashLayer.style.transition = 'none';
   flashLayer.style.background = 'var(--danger)';
@@ -855,8 +896,9 @@ function mainLoop(now){
   if(!lastFrame) lastFrame = now;
   let dt = now - lastFrame;
   lastFrame = now;
-  dt = Math.min(dt, 48);
+  dt = Math.min(dt, 48); // تفادي قفزات كبيرة عند تبديل التبويب
 
+  // قياس FPS للتحكم بالجودة تلقائياً
   fpsAccum += dt; fpsFrames++;
   if(fpsAccum >= 500){
     Quality.sampleFps(1000/(fpsAccum/fpsFrames));
@@ -875,7 +917,7 @@ function mainLoop(now){
       w.y += w.speed*dt;
       let tx = w.x, ty = w.y, sc = 1;
       if(w.hitUntil > now){
-        const remain = (w.hitUntil - now) / 170;
+        const remain = (w.hitUntil - now) / 170; // 1 -> 0
         tx += (Math.random()*2-1) * 5 * remain;
         ty += (Math.random()*2-1) * 3 * remain;
         sc = 1 + 0.09 * remain;
@@ -917,7 +959,6 @@ function handleKey(e){
       activeWord.typedCount++;
       activeWord.hitUntil = performance.now() + 170;
       renderWordProgress(activeWord);
-      Sound.play('hit');
       if(activeWord.typedCount === activeWord.text.length){
         explode(activeWord);
         words = words.filter(w=>w!==activeWord);
@@ -925,7 +966,6 @@ function handleKey(e){
       }
     } else {
       resetCombo();
-      Sound.play('miss');
     }
     updateHud();
     return;
@@ -940,7 +980,6 @@ function handleKey(e){
   activeWord.typedCount = 1;
   activeWord.hitUntil = performance.now() + 170;
   renderWordProgress(activeWord);
-  Sound.play('hit');
   updateHud();
   if(activeWord.typedCount === activeWord.text.length){
     explode(activeWord);
@@ -977,9 +1016,9 @@ function startGame(){
 function levelUp(){
   level++;
   updateHud();
-  Sound.play('levelUp');
   running = false;
   clearInterval(spawnTimer);
+  AudioMgr.play('victory');
   levelUpOverlay.style.display = 'flex';
   setTimeout(()=>{
     levelUpOverlay.style.display = 'none';
@@ -995,13 +1034,14 @@ function endGame(won){
   words.forEach(w=>w.el.remove()); words = [];
   hud.classList.remove('show');
   resetCombo();
+  AudioMgr.stopLoop('heartbeat', 0.3);
 
   const elapsed = Math.floor((Date.now()-startTime)/1000);
   const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
   const best = Math.max(score, parseInt(localStorage.getItem(BEST_KEY) || '0', 10));
   localStorage.setItem(BEST_KEY, best);
 
-  Sound.play(won ? 'success' : 'fail');
+  AudioMgr.play('glitchEffect', { gainMul:0.6 });
 
   overlay.querySelector('.panel').innerHTML = `
     <h1 class="danger">فشلت مهمة الصد</h1>
@@ -1017,44 +1057,46 @@ function endGame(won){
     <button id="startBtn">إعادة المهمة</button>
   `;
   overlay.style.display = 'flex';
+  if(AudioMgr.isLoaded) AudioMgr.playLoop('waitingLoop', { fadeInDur:1.2 });
   document.getElementById('startBtn').addEventListener('click', beginSequence);
 }
 
 /* =========================================================
-   المقدمة السينمائية: الإقلاع -> الاختراق المزيف -> الدفاع -> عد تنازلي
+   المقدمة السينمائية: استيقاظ المركز -> الاختراق -> الدفاع -> عد تنازلي
 ========================================================= */
-function typeLine(el, text, speed){
-  return new Promise(resolve=>{
-    let i = 0;
-    el.style.opacity = '1';
-    const interval = setInterval(()=>{
-      el.textContent = text.slice(0,i);
-      if(i < text.length) Sound.play('boot');
-      i++;
-      if(i > text.length){
-        clearInterval(interval);
-        resolve();
-      }
-    }, speed);
-  });
-}
 
-async function playBootSequence(){
-  bootScreen.style.display = 'block';
-  bootLinesEl.innerHTML = '';
-  for(const line of BOOT_LINES){
-    const div = document.createElement('div');
-    div.className = 'line';
-    bootLinesEl.appendChild(div);
-    await typeLine(div, line, 26);
-    await new Promise(r=> setTimeout(r, 90));
-  }
-  await new Promise(r=> setTimeout(r, 250));
-  bootScreen.classList.add('glitch');
-  Sound.play('alarm');
+async function playAwakenSequence(){
+  awakenScene.style.display = 'flex';
+  awakenLabel.classList.remove('show');
+  awakenCenterMark.classList.remove('show');
+  awakenNodes.forEach(n=> n.classList.remove('on'));
+
+  requestAnimationFrame(()=> requestAnimationFrame(()=> awakenScene.classList.add('show')));
+
+  // الحلقات تُرسم بصرياً (CSS)، والعقد تضيء واحدة تلو الأخرى بدل أي نص
   await new Promise(r=> setTimeout(r, 500));
-  bootScreen.classList.remove('glitch');
-  bootScreen.style.display = 'none';
+  for(let i=0;i<awakenNodes.length;i++){
+    awakenNodes[i].classList.add('on');
+    AudioMgr.play('uiHit', { gainMul:0.4, rateJitter:0.08 });
+    await new Promise(r=> setTimeout(r, 110));
+  }
+
+  // 3 كلمات قصيرة جداً بس، كل وحدة تظهر وتختفي
+  for(const label of AWAKEN_LABELS){
+    awakenLabel.textContent = label;
+    awakenLabel.classList.add('show');
+    await new Promise(r=> setTimeout(r, 480));
+    awakenLabel.classList.remove('show');
+    await new Promise(r=> setTimeout(r, 140));
+  }
+
+  awakenCenterMark.classList.add('show');
+  AudioMgr.play('whoosh');
+  await new Promise(r=> setTimeout(r, 700));
+
+  awakenScene.classList.remove('show');
+  await new Promise(r=> setTimeout(r, 500));
+  awakenScene.style.display = 'none';
 }
 
 function revealWords(el, text, startDelay, stepDelay){
@@ -1063,61 +1105,109 @@ function revealWords(el, text, startDelay, stepDelay){
   ).join(' ');
 }
 
+function spawnEmbers(count){
+  emberField.innerHTML = '';
+  for(let i=0;i<count;i++){
+    const e = document.createElement('div');
+    e.className = 'ember';
+    const left = Math.random()*100;
+    const dur = 3.2 + Math.random()*2.4;
+    const delay = Math.random()*3.5;
+    const drift = (Math.random()*40-20).toFixed(0)+'px';
+    e.style.left = left+'%';
+    e.style.setProperty('--drift', drift);
+    e.style.animationDuration = dur+'s';
+    e.style.animationDelay = delay+'s';
+    emberField.appendChild(e);
+  }
+}
+
 async function playBreachSequence(){
   const titleText = breachTitle.textContent;
   breachTitle.classList.remove('pulse');
   revealWords(breachTitle, titleText, 150, 110);
   breachSub.classList.remove('show');
   breachStatus.classList.remove('show');
+  spawnEmbers(16);
 
+  AudioMgr.play('hackStart');
   breachOverlay.style.display = 'flex';
   requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
-  Sound.play('radarPing');
 
-  await new Promise(r=> setTimeout(r, 1300));
+  // 1) الرادار + الشارة يظهرون، تشويش خفيف مصاحب لظهور المشهد
+  AudioMgr.play('hackStatic', { gainMul:0.8 });
+  await new Promise(r=> setTimeout(r, 500));
+  AudioMgr.play('alarm', { gainMul:0.7 });
+  await new Promise(r=> setTimeout(r, 800));
   breachTitle.classList.add('pulse');
 
+  // 2) الوصف يظهر
   breachSub.classList.add('show');
   await new Promise(r=> setTimeout(r, 550));
 
+  // 3) حالة التفعيل تظهر أخيراً
   breachStatus.classList.add('show');
 
+  // 4) وقت قراءة كافٍ قبل الانتقال (المشهد كامل ~5.5 ثانية)
   await new Promise(r=> setTimeout(r, 3200));
 
+  AudioMgr.play('hackEnd');
   breachOverlay.classList.remove('show');
   await new Promise(r=> setTimeout(r, 500));
   breachOverlay.style.display = 'none';
+  emberField.innerHTML = '';
 }
 
 async function playDefenseSequence(){
   defenseOverlay.style.display = 'flex';
   countdownNum.textContent = '';
-  await new Promise(r=> setTimeout(r, 900));
-  const seq = ['٣','٢','١'];
-  for(let idx=0; idx<seq.length; idx++){
-    const n = seq[idx];
-    countdownNum.textContent = n;
+  await new Promise(r=> setTimeout(r, 500));
+
+  // العد التنازلي: كل رقم متزامن حرفياً مع ملفه الصوتي الخاص، بدون أي تداخل
+  const steps = [ {num:'٣', snd:'count3'}, {num:'٢', snd:'count2'}, {num:'١', snd:'count1'} ];
+  for(const step of steps){
+    countdownNum.textContent = step.num;
     countdownNum.style.animation = 'none';
     void countdownNum.offsetWidth;
     countdownNum.style.animation = 'fadeUp .4s ease';
-    Sound.play('countBeep', 500 + (seq.length-idx)*140);
-    await new Promise(r=> setTimeout(r, 650));
+    AudioMgr.play(step.snd);
+    await new Promise(r=> setTimeout(r, 780));
   }
-  Sound.play('go');
+
+  // ضربة انتقال قصيرة (أول 900ms فقط من الملف) ثم اللعبة تبدأ فوراً
+  AudioMgr.playClip('kickImpact', 0, 0.9);
   defenseOverlay.style.display = 'none';
 }
 
 async function beginSequence(){
+  AudioMgr.stopLoop('waitingLoop', 0.4);
+  AudioMgr.play('uiHit');
   overlay.style.display = 'none';
   resizeCanvases();
-  await playBootSequence();
+  await playAwakenSequence();
+  AudioMgr.playLoop('glitchAmbient', { fadeInDur:1.0 });
   await playBreachSequence();
   await playDefenseSequence();
+  AudioMgr.stopLoop('glitchAmbient', 1.0);
   startGame();
   mobileInput.focus();
 }
 
 startBtn.addEventListener('click', beginSequence);
+
+let waitingLoopArmed = false;
+async function armWaitingLoop(){
+  if(waitingLoopArmed) return;
+  waitingLoopArmed = true;
+  AudioMgr.unlock();
+  await AudioMgr.preloadAll();
+  if(overlay.style.display !== 'none'){
+    AudioMgr.playLoop('waitingLoop', { fadeInDur:1.5 });
+  }
+}
+['pointerdown','keydown','touchstart'].forEach(ev=>
+  window.addEventListener(ev, armWaitingLoop, { once:true, passive:true })
+);
 
 /* =========================================================
    إعادة ضبط سرعة التوليد عند تغيّر المستوى
@@ -1135,6 +1225,31 @@ setInterval(()=>{
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){ lastFrame = 0; }
 });
+
+/* =========================================================
+   تفعيل التثبيت كتطبيق على الهاتف (PWA)
+========================================================= */
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  installBtn.style.display = 'block';
+});
+installBtn.addEventListener('click', async ()=>{
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBtn.style.display = 'none';
+});
+window.addEventListener('appinstalled', ()=>{ installBtn.style.display = 'none'; });
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
 
 /* =========================================================
    تشغيل الخلفية عند البدء
