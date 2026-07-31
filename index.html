@@ -343,31 +343,165 @@ function applyTierClass(){
 applyTierClass();
 
 /* =========================================================
-   نظام الصوت (يفشل بصمت إن لم تتوفر الملفات)
+   محرك الصوت السينمائي — Web Audio API مُصنَّع بالكامل
+   (يبني كل الأصوات رياضياً: نغمات، ضوضاء، فلاتر — لا ملفات خارجية)
 ========================================================= */
 const Sound = (() => {
-  const files = {
-    boot: "sounds/boot.mp3", alarm: "sounds/alarm.mp3",
-    explosion: "sounds/explosion.mp3", success: "sounds/success.mp3", fail: "sounds/fail.mp3",
-    hit: "sounds/hit.mp3"
-  };
-  const cache = {};
-  function play(name){
+  let ctx = null;
+  let master = null;
+  let unlocked = false;
+
+  function ensureCtx(){
+    if(ctx) return ctx;
     try{
-      if(!files[name]) return;
-      if(!cache[name]){
-        const a = new Audio(files[name]);
-        a.volume = 0.5;
-        a.onerror = () => { cache[name] = null; };
-        cache[name] = a;
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = 0.55;
+      master.connect(ctx.destination);
+    }catch(e){ ctx = null; }
+    return ctx;
+  }
+  function unlock(){
+    if(unlocked) return;
+    const c = ensureCtx();
+    if(c && c.state === 'suspended') c.resume();
+    unlocked = true;
+  }
+  window.addEventListener('pointerdown', unlock, { once:true });
+  window.addEventListener('keydown', unlock, { once:true });
+
+  function now(){ return ctx.currentTime; }
+
+  function osc(type, freq, t0, dur, gainPeak, opts={}){
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    if(opts.freqEnd !== undefined){
+      o.frequency.exponentialRampToValueAtTime(Math.max(opts.freqEnd,1), t0+dur);
+    }
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gainPeak, t0 + (opts.attack || 0.008));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g);
+    let node = g;
+    if(opts.filterFreq){
+      const f = ctx.createBiquadFilter();
+      f.type = opts.filterType || 'lowpass';
+      f.frequency.value = opts.filterFreq;
+      g.connect(f);
+      node = f;
+    }
+    node.connect(master);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+    return o;
+  }
+
+  function noiseBurst(t0, dur, gainPeak, opts={}){
+    const bufSize = ctx.sampleRate * dur;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<bufSize;i++){ data[i] = (Math.random()*2-1) * (1 - i/bufSize); }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gainPeak, t0 + (opts.attack || 0.005));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    const f = ctx.createBiquadFilter();
+    f.type = opts.filterType || 'bandpass';
+    f.frequency.value = opts.filterFreq || 1800;
+    f.Q.value = opts.q || 0.9;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t0);
+    src.stop(t0 + dur + 0.02);
+  }
+
+  const fx = {
+    boot(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('square', 1450, t, 0.028, 0.05, { filterFreq:2400 });
+    },
+    alarm(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('sawtooth', 220, t, 0.55, 0.10, { freqEnd:880, filterFreq:1600, attack:0.02 });
+      osc('sawtooth', 216, t, 0.55, 0.08, { freqEnd:860, filterFreq:1400, attack:0.02 });
+      noiseBurst(t, 0.5, 0.05, { filterFreq:3000, q:0.6 });
+    },
+    radarPing(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('sine', 1200, t, 0.35, 0.06, { freqEnd:700, filterFreq:2200 });
+    },
+    countBeep(pitch){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('square', pitch, t, 0.14, 0.09, { filterFreq:2600 });
+    },
+    go(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('sawtooth', 440, t, 0.32, 0.11, { freqEnd:1760, filterFreq:3200, attack:0.01 });
+      noiseBurst(t, 0.15, 0.06, { filterFreq:4000, q:0.7 });
+    },
+    hit(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('square', 1900 + Math.random()*220, t, 0.045, 0.045, { filterFreq:5000, attack:0.002 });
+    },
+    miss(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('sawtooth', 180, t, 0.16, 0.07, { freqEnd:90, filterFreq:900 });
+    },
+    explosion(mult){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      const m = Math.min(mult||1, 4);
+      osc('sine', 130, t, 0.22 + m*0.04, 0.14 + m*0.03, { freqEnd:38, attack:0.004 });
+      noiseBurst(t, 0.18 + m*0.03, 0.09 + m*0.02, { filterFreq:2600 - m*200, q:0.8 });
+      if(m >= 3){
+        osc('sine', 2200, t+0.01, 0.09, 0.05, { freqEnd:3200, filterFreq:5000 });
       }
-      if(cache[name]){
-        const inst = cache[name].cloneNode();
-        inst.volume = 0.5;
-        inst.play().catch(()=>{});
-      }
+    },
+    coreHit(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      osc('sawtooth', 90, t, 0.4, 0.16, { freqEnd:40, filterFreq:700 });
+      noiseBurst(t, 0.3, 0.11, { filterFreq:600, q:0.5 });
+    },
+    levelUp(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=>{
+        osc('triangle', f, t + i*0.09, 0.22, 0.09, { filterFreq:4000, attack:0.005 });
+      });
+    },
+    success(){
+      fx.levelUp();
+    },
+    fail(){
+      const c = ensureCtx(); if(!c) return;
+      const t = now();
+      [392, 349.23, 261.63].forEach((f,i)=>{
+        osc('sawtooth', f, t + i*0.16, 0.5, 0.10, { freqEnd:f*0.5, filterFreq:900 });
+      });
+      noiseBurst(t, 0.6, 0.06, { filterFreq:500, q:0.5 });
+    }
+  };
+
+  function play(name, arg){
+    try{
+      if(!fx[name]) return;
+      ensureCtx();
+      if(ctx && ctx.state === 'suspended') ctx.resume();
+      fx[name](arg);
     }catch(e){ /* تجاهل بصمت */ }
   }
+
   return { play };
 })();
 
@@ -414,7 +548,7 @@ let mCols = [], stageW = 0, stageH = 0;
 function resizeCanvases(){
   stageW = stage.clientWidth; stageH = stage.clientHeight;
   const dpr = Quality.cfg.dpr;
-  const bgDpr = Math.min(dpr, 1); // خلفية زخرفية، دقة retina كاملة غير ضرورية وتكلف أداء كبير
+  const bgDpr = Math.min(dpr, 1);
   bgCanvas.width = stageW * bgDpr; bgCanvas.height = stageH * bgDpr;
   bgCanvas.style.width = stageW+'px'; bgCanvas.style.height = stageH+'px';
   fxCanvas.width = stageW * dpr; fxCanvas.height = stageH * dpr;
@@ -448,9 +582,8 @@ function drawBg(){
 const Particles = (() => {
   const pool = [];
   const active = [];
-  function ease(t){ return 1 - Math.pow(1-t, 3); } // easeOutCubic
+  function ease(t){ return 1 - Math.pow(1-t, 3); }
 
-  // sprites glow جاهزة مسبقاً بدل shadowBlur (رسم مسبق مرة واحدة فقط، ثم drawImage السريع)
   const glowSprites = {};
   function getGlowSprite(color){
     if(glowSprites[color]) return glowSprites[color];
@@ -628,7 +761,7 @@ function spawnWord(){
   const x = Math.random() * (stageW - 150) + 20;
   el.style.transform = `translate3d(${x}px,-46px,0)`;
   requestAnimationFrame(()=> el.classList.add('in'));
-  const speed = (0.42 + level*0.11 + Math.random()*0.18) * 0.06; // px/ms
+  const speed = (0.42 + level*0.11 + Math.random()*0.18) * 0.06;
   words.push({el, text, x, typedCount:0, y:-46, speed, danger:false, hitUntil:0});
 }
 
@@ -664,7 +797,12 @@ function explode(w){
   });
 
   Shake.trigger(2.5 + mult*1.4);
-  Sound.play('explosion');
+  Sound.play('explosion', mult);
+
+  if(mult >= 3){
+    running = false;
+    setTimeout(()=>{ running = true; }, 55);
+  }
 
   registerHit();
   const mNow = multiplierFor(combo);
@@ -694,6 +832,7 @@ function screenShakeCoreHit(){
   setTimeout(()=> coreEl.classList.remove('hit'), 260);
 }
 function redFlashBrief(){
+  Sound.play('coreHit');
   screenShakeCoreHit();
   flashLayer.style.transition = 'none';
   flashLayer.style.background = 'var(--danger)';
@@ -716,9 +855,8 @@ function mainLoop(now){
   if(!lastFrame) lastFrame = now;
   let dt = now - lastFrame;
   lastFrame = now;
-  dt = Math.min(dt, 48); // تفادي قفزات كبيرة عند تبديل التبويب
+  dt = Math.min(dt, 48);
 
-  // قياس FPS للتحكم بالجودة تلقائياً
   fpsAccum += dt; fpsFrames++;
   if(fpsAccum >= 500){
     Quality.sampleFps(1000/(fpsAccum/fpsFrames));
@@ -737,7 +875,7 @@ function mainLoop(now){
       w.y += w.speed*dt;
       let tx = w.x, ty = w.y, sc = 1;
       if(w.hitUntil > now){
-        const remain = (w.hitUntil - now) / 170; // 1 -> 0
+        const remain = (w.hitUntil - now) / 170;
         tx += (Math.random()*2-1) * 5 * remain;
         ty += (Math.random()*2-1) * 3 * remain;
         sc = 1 + 0.09 * remain;
@@ -779,6 +917,7 @@ function handleKey(e){
       activeWord.typedCount++;
       activeWord.hitUntil = performance.now() + 170;
       renderWordProgress(activeWord);
+      Sound.play('hit');
       if(activeWord.typedCount === activeWord.text.length){
         explode(activeWord);
         words = words.filter(w=>w!==activeWord);
@@ -786,6 +925,7 @@ function handleKey(e){
       }
     } else {
       resetCombo();
+      Sound.play('miss');
     }
     updateHud();
     return;
@@ -800,6 +940,7 @@ function handleKey(e){
   activeWord.typedCount = 1;
   activeWord.hitUntil = performance.now() + 170;
   renderWordProgress(activeWord);
+  Sound.play('hit');
   updateHud();
   if(activeWord.typedCount === activeWord.text.length){
     explode(activeWord);
@@ -836,6 +977,7 @@ function startGame(){
 function levelUp(){
   level++;
   updateHud();
+  Sound.play('levelUp');
   running = false;
   clearInterval(spawnTimer);
   levelUpOverlay.style.display = 'flex';
@@ -887,6 +1029,7 @@ function typeLine(el, text, speed){
     el.style.opacity = '1';
     const interval = setInterval(()=>{
       el.textContent = text.slice(0,i);
+      if(i < text.length) Sound.play('boot');
       i++;
       if(i > text.length){
         clearInterval(interval);
@@ -899,7 +1042,6 @@ function typeLine(el, text, speed){
 async function playBootSequence(){
   bootScreen.style.display = 'block';
   bootLinesEl.innerHTML = '';
-  Sound.play('boot');
   for(const line of BOOT_LINES){
     const div = document.createElement('div');
     div.className = 'line';
@@ -930,19 +1072,16 @@ async function playBreachSequence(){
 
   breachOverlay.style.display = 'flex';
   requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
+  Sound.play('radarPing');
 
-  // 1) الرادار + الشارة يظهرون (0 -> ~700ms) ثم العنوان يتكشف كلمة كلمة
   await new Promise(r=> setTimeout(r, 1300));
   breachTitle.classList.add('pulse');
 
-  // 2) الوصف يظهر
   breachSub.classList.add('show');
   await new Promise(r=> setTimeout(r, 550));
 
-  // 3) حالة التفعيل تظهر أخيراً
   breachStatus.classList.add('show');
 
-  // 4) وقت قراءة كافٍ قبل الانتقال (المشهد كامل ~5.5 ثانية)
   await new Promise(r=> setTimeout(r, 3200));
 
   breachOverlay.classList.remove('show');
@@ -954,13 +1093,17 @@ async function playDefenseSequence(){
   defenseOverlay.style.display = 'flex';
   countdownNum.textContent = '';
   await new Promise(r=> setTimeout(r, 900));
-  for(const n of ['٣','٢','١']){
+  const seq = ['٣','٢','١'];
+  for(let idx=0; idx<seq.length; idx++){
+    const n = seq[idx];
     countdownNum.textContent = n;
     countdownNum.style.animation = 'none';
     void countdownNum.offsetWidth;
     countdownNum.style.animation = 'fadeUp .4s ease';
+    Sound.play('countBeep', 500 + (seq.length-idx)*140);
     await new Promise(r=> setTimeout(r, 650));
   }
+  Sound.play('go');
   defenseOverlay.style.display = 'none';
 }
 
