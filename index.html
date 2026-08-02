@@ -25,12 +25,21 @@
   #stage{position:relative; width:100%; height:100vh; overflow:hidden;
     background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%); }
 
-  #world{position:absolute; inset:0; z-index:0; transform-origin:50% 90%; will-change:transform;}
+  #world{position:absolute; inset:0; z-index:1; transform-origin:50% 90%; will-change:transform;}
   #bgCanvas{position:absolute; inset:0; z-index:0;}
   #fxCanvas{position:absolute; inset:0; z-index:6; pointer-events:none;}
   #gridOverlay{position:absolute; inset:0; z-index:1; pointer-events:none;
     background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size:42px 42px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 85%);}
+  #ambientFog{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.92;
+    background-image:
+      radial-gradient(circle at 18% 18%, rgba(63,232,201,.10), transparent 10%),
+      radial-gradient(circle at 80% 12%, rgba(255,180,84,.05), transparent 12%),
+      radial-gradient(circle at 52% 74%, rgba(63,232,201,.06), transparent 14%);
+    animation: ambientBreath 18s ease-in-out infinite alternate;}
+  #digitalDust{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.22;
+    background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size:100% 46px, 46px 100%; filter:blur(.3px); animation: dustDrift 14s linear infinite;}
 
   #scanlines{position:absolute; inset:0; z-index:35; pointer-events:none; opacity:0.1;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,0.9) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.9) 3px);}
@@ -40,8 +49,11 @@
 
   /* ===== HUD ===== */
   #hud{position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start;
-    padding:16px 20px; z-index:10; pointer-events:none; opacity:0; transition:opacity .5s;}
-  #hud.show{opacity:1;}
+    padding:16px 20px; z-index:10; pointer-events:none; opacity:0; transform:translateY(-18px); transition:opacity .5s ease, transform .5s ease;}
+  #hud.show{opacity:1; transform:translateY(0);}  
+  #hud .glass{opacity:0; transform:translateY(-10px) scale(0.98); animation: hudItemIn .6s cubic-bezier(.16,.9,.3,1) forwards;}
+  #hud .glass:nth-child(1){animation-delay:.18s;} #hud .glass:nth-child(2){animation-delay:.24s;} #hud .glass:nth-child(3){animation-delay:.30s;} #hudRight .glass{animation-delay:.36s;}
+  @keyframes hudItemIn{to{opacity:1; transform:translateY(0) scale(1);}}
   .glass{ background:rgba(14,22,36,0.82); border:1px solid var(--glass-border); border-radius:12px; }
   body.q-high .glass{ background:var(--glass); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
   .hud-block{ padding:8px 16px; text-align:center; min-width:74px; position:relative; overflow:hidden;}
@@ -73,10 +85,17 @@
 
   /* ===== الكلمات ===== */
   .word{ position:absolute; top:0; left:0; font-size:19px; white-space:nowrap; padding:6px 14px; border-radius:8px;
-    background:rgba(14,22,36,0.82); border:1px solid var(--core-dim); letter-spacing:1px; z-index:4;
-    box-shadow:0 0 14px rgba(63,232,201,.12); contain:layout style paint; will-change:transform;
-    opacity:0; transition:opacity .28s ease, border-color .15s, box-shadow .15s; }
-  .word.in{ opacity:1; }
+    background:rgba(14,22,36,0.86); border:1px solid var(--core-dim); letter-spacing:1px; z-index:4;
+    box-shadow:0 0 14px rgba(63,232,201,.12); contain:layout style paint; will-change:transform, opacity, filter;
+    opacity:0; transform-origin:center center; filter:blur(8px); transition:opacity .42s ease, transform .42s cubic-bezier(.16,.9,.3,1), filter .42s ease, box-shadow .3s ease, border-color .2s ease; }
+  .word.in{ opacity:1; filter:blur(0); }
+  .word.locked{ border-color:var(--amber); box-shadow:0 0 28px rgba(255,180,84,.35); }
+  .word.danger{ border-color:var(--danger); box-shadow:0 0 20px rgba(255,59,78,.35); }
+  .word.glitch{ animation: wordGlitch .42s ease both; }
+  @keyframes wordGlitch{ 0%{ transform:translate3d(0,0,0) scale(1); filter:blur(0); }
+    30%{ transform:translate3d(3px,-2px,0) scale(1.02); filter:blur(1px); }
+    60%{ transform:translate3d(-2px,2px,0) scale(0.98); filter:blur(1px); }
+    100%{ transform:translate3d(0,0,0) scale(1); filter:blur(0); }}
   .word .typed{ color:var(--amber2); text-shadow:0 0 8px rgba(255,180,84,.8);}
   .word .rest{ color:var(--text); }
   .word.locked{ border-color:var(--amber); box-shadow:0 0 18px rgba(255,180,84,.4); }
@@ -86,6 +105,10 @@
   #awakenScene{ position:absolute; inset:0; z-index:50; display:none; align-items:center; justify-content:center;
     background:radial-gradient(ellipse at 50% 50%, #061018, #020408 78%);
     opacity:0; transition:opacity .6s ease; overflow:hidden; }
+  #awakenScene.show{ background:radial-gradient(ellipse at 50% 50%, #06212c, #020408 74%); }
+  #awakenCenterMark svg{ filter:drop-shadow(0 0 18px rgba(63,232,201,.55)); }
+  #awakenLabel{ opacity:0; transform:scale(0.92); transition:opacity .4s ease, transform .4s cubic-bezier(.16,.9,.3,1); }
+  #awakenLabel.show{ opacity:1; transform:scale(1); }
   #awakenScene.show{ opacity:1; }
   #awakenScene.fadeOut{ opacity:0; }
   #awakenCore{ position:relative; width:280px; height:280px; }
@@ -102,17 +125,45 @@
   @keyframes spinSlow{ to{ transform:rotate(360deg); } }
   .awakenNode{ fill:var(--dim2); transition:fill .35s ease; }
   .awakenNode.on{ fill:var(--core); filter:drop-shadow(0 0 5px var(--core)); }
+  @keyframes nodePulse{ 0%,100%{ filter:drop-shadow(0 0 5px var(--core)); } 50%{ filter:drop-shadow(0 0 13px var(--core)); } }
+  .awakenNode.pulse{ animation: nodePulse 1.35s ease-in-out infinite; }
+  .awakenBeam{ stroke:rgba(63,232,201,0.12); stroke-width:1; fill:none;
+    stroke-dasharray:140; stroke-dashoffset:140; transition:stroke-dashoffset .5s cubic-bezier(.3,.8,.3,1), stroke .3s ease; }
+  .awakenBeam.on{ stroke-dashoffset:0; stroke:rgba(63,232,201,0.6); filter:drop-shadow(0 0 3px rgba(63,232,201,.6)); }
   #awakenCenterMark{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
   #awakenCenterMark svg{ width:46px; height:46px; opacity:0; transform:scale(0.5);
-    transition:opacity .5s ease, transform .5s cubic-bezier(.2,1.4,.4,1); }
+    clip-path:circle(0% at 50% 50%);
+    transition:opacity .5s ease, transform .5s cubic-bezier(.2,1.4,.4,1), clip-path .65s cubic-bezier(.76,0,.24,1); }
+  #awakenCenterMark svg.opening{ clip-path:circle(100% at 50% 50%); }
   #awakenCenterMark svg.show{ opacity:1; transform:scale(1); }
+  @keyframes labelPunch{
+    0%{ transform:scale(0.65) translateY(8px); filter:blur(7px); letter-spacing:10px; }
+    55%{ transform:scale(1.22); filter:blur(0); letter-spacing:2px; }
+    100%{ transform:scale(1); letter-spacing:4px; }
+  }
+  #awakenLabel.punch{ animation: labelPunch .46s cubic-bezier(.2,1.6,.3,1); }
+  #irisWipe{ position:absolute; inset:0; z-index:65; pointer-events:none;
+    background: radial-gradient(circle at 50% 50%, #eafffa 0%, #3fe8c9 32%, #04241f 100%);
+    clip-path:circle(0% at 50% 50%); }
+  #irisWipe.animate{ transition: clip-path .58s cubic-bezier(.76,0,.24,1); }
+  #irisWipe.fastBlink{ transition: clip-path .1s ease-in-out; }
+  #irisWipe.closed{ clip-path:circle(150% at 50% 50%); }
   #awakenLabel{ position:absolute; bottom:16%; left:50%; transform:translateX(-50%); text-align:center;
     font-size:14px; letter-spacing:4px; color:var(--core2); text-shadow:0 0 12px rgba(63,232,201,.6);
     opacity:0; transition:opacity .35s ease; white-space:nowrap; }
   #awakenLabel.show{ opacity:1; }
 
   #breachOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
-    flex-direction:column; background:rgba(10,2,4,0.55); opacity:0; transition:opacity .5s ease; overflow:hidden; }
+    flex-direction:column; background:rgba(10,2,4,0.55); opacity:0; transition:opacity .5s ease, transform .5s ease; overflow:hidden; transform:scale(0.98); }
+  #breachOverlay.show{ opacity:1; transform:scale(1); }
+  #breachContent{ opacity:0; transform:translateY(18px) scale(0.98); transition:opacity .55s ease, transform .55s ease; }
+  #breachOverlay.show #breachContent{ opacity:1; transform:translateY(0) scale(1); }
+  #simBadge2{ opacity:0; transform:translateY(12px); transition:opacity .5s ease .2s, transform .5s ease .2s; }
+  #breachOverlay.show #simBadge2{ opacity:1; transform:translateY(0); }
+  #breachTitle{ opacity:0; transform:translateY(10px) scale(0.98); transition:opacity .55s ease .25s, transform .55s ease .25s; }
+  #breachOverlay.show #breachTitle{ opacity:1; transform:translateY(0) scale(1); }
+  #breachSub, #breachStatus{ opacity:0; transform:translateY(8px); transition:opacity .45s ease, transform .45s ease; }
+  #breachSub.show, #breachStatus.show{ opacity:1; transform:translateY(0); }
   #breachOverlay.show{ opacity:1; }
   #breachContent{ display:flex; flex-direction:column; align-items:center; position:relative; z-index:2;
     transform:scale(1.08); transition:transform 3.2s cubic-bezier(.16,.6,.3,1); }
@@ -161,7 +212,13 @@
   #breachStatus.show{ opacity:1; }
 
   #defenseOverlay{ position:absolute; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
-    flex-direction:column; background:rgba(0,10,8,0.4); }
+    flex-direction:column; background:rgba(0,10,8,0.6); opacity:0; transform:scale(0.98); transition:opacity .45s ease, transform .45s ease; }
+  #defenseOverlay.show{ opacity:1; transform:scale(1); }
+  #defenseTitle{ opacity:0; transform:translateY(8px); animation: fadeUp .5s ease forwards .15s; }
+  #defenseOverlay.show #defenseTitle{ opacity:1; transform:translateY(0); }
+  #countdownNum{ opacity:0; transform:scale(0.76); animation: none; }
+  #countdownNum.countdownActive{ animation: countdownPop .72s cubic-bezier(.16,.9,.3,1) forwards; }
+  @keyframes countdownPop{ 0%{ opacity:0; transform:scale(0.7); filter:blur(2px);} 40%{ opacity:1; transform:scale(1.16); } 100%{ opacity:1; transform:scale(1); filter:blur(0);} }
   #defenseTitle{ font-size:30px; font-weight:800; color:var(--core2); letter-spacing:2px; text-align:center;
     text-shadow:0 0 20px rgba(63,232,201,.7); opacity:0; animation: fadeUp .5s ease forwards;}
   @keyframes fadeUp{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
@@ -170,7 +227,15 @@
 
   /* ===== شاشات البداية / النهاية ===== */
   #overlay{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:rgba(5,7,13,0.86); z-index:20; text-align:center; padding:20px;}
+    background:rgba(5,7,13,0.92); z-index:20; text-align:center; padding:20px; backdrop-filter:blur(10px);}
+  #overlay .panel{ opacity:0; transform:translateY(18px) scale(0.96); animation: panelEnter .82s cubic-bezier(.16,.9,.3,1) forwards; }
+  #overlay.show .panel{ opacity:1; transform:translateY(0) scale(1); }
+  #simBadge{ opacity:0; transform:translateY(8px); animation: panelItemIn .55s ease forwards .1s; }
+  #overlay h1{ opacity:0; transform:translateY(12px); animation: panelItemIn .58s ease forwards .18s; }
+  #overlay p{ opacity:0; transform:translateY(14px); animation: panelItemIn .58s ease forwards .26s; }
+  #overlay button{ opacity:0; transform:translateY(16px) scale(0.98); animation: panelItemIn .55s ease forwards .34s; }
+  @keyframes panelEnter{ to{opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes panelItemIn{ to{opacity:1; transform:translateY(0) scale(1);} }
   #overlay .panel{ padding:34px 36px; max-width:400px;}
   #simBadge{ display:inline-block; font-size:11px; letter-spacing:1px; color:var(--core2);
     background:rgba(63,232,201,0.1); border:1px solid var(--core-dim); border-radius:20px;
@@ -192,7 +257,13 @@
 
   /* ===== انتقال المستوى ===== */
   #levelUpOverlay{ position:absolute; inset:0; z-index:45; display:none; align-items:center; justify-content:center;
-    flex-direction:column; background:rgba(6,10,8,0.55);}
+    flex-direction:column; background:rgba(6,10,8,0.55); opacity:0; transform:scale(0.98); transition:opacity .4s ease, transform .4s ease;}
+  #levelUpOverlay.show{ display:flex; opacity:1; transform:scale(1); }
+  #levelUpTitle, #levelUpSub{ opacity:0; transform:translateY(12px); }
+  #levelUpOverlay.show #levelUpTitle{ animation: panelItemIn .5s ease forwards .08s; }
+  #levelUpOverlay.show #levelUpSub{ animation: panelItemIn .5s ease forwards .18s; }
+  @keyframes ambientBreath{ from{opacity:.88; transform:scale(1);} to{opacity:.98; transform:scale(1.01);} }
+  @keyframes dustDrift{ from{background-position:0 0,0 0;} to{background-position:0 720px,720px 0;} }
   #levelUpTitle{ font-size:32px; color:var(--amber2); font-weight:800; letter-spacing:2px; text-shadow:0 0 20px rgba(255,180,84,.6);
     opacity:0; animation: fadeUp .45s ease forwards;}
   #levelUpSub{ margin-top:10px; font-size:13px; color:var(--dim); opacity:0; animation: fadeUp .45s ease .1s forwards;}
@@ -221,6 +292,8 @@
     <canvas id="bgCanvas"></canvas>
     <div id="gridOverlay"></div>
   </div>
+  <div id="ambientFog"></div>
+  <div id="digitalDust"></div>
   <canvas id="fxCanvas"></canvas>
 
   <div id="hud">
@@ -257,12 +330,30 @@
 
   <!-- شاشة البداية -->
   <div id="overlay">
-    <div class="glass panel">
+    <div class="glass panel" id="startPanel">
       <div id="simBadge">🛡️ محاكاة تدريبية — غرفة عمليات أمن سيبراني</div>
       <h1>قناص الكلمات</h1>
       <p>خادم تحت المراقبة يتعرض لمحاولة هجوم. كلمات تمثل حزم اختراق تنزل نحو نواة الدفاع — اكتبها حرفًا بحرف بالترتيب لصدها قبل وصولها. الكلمة المضيئة (البرتقالية) هي التي تكتب فيها حاليًا. سلسلة الإصابات المتتالية ترفع مضاعف نقاطك.</p>
-      <button id="startBtn">دخول غرفة العمليات</button>
+      <div id="bestRow" class="glass" style="padding:8px 14px; margin-bottom:18px; font-size:12px; color:var(--dim); display:inline-block;">
+        أفضل نتيجة: <b id="bestScoreLabel" style="color:var(--amber2);">0</b> &nbsp;|&nbsp; أعلى مستوى: <b id="bestLevelLabel" style="color:var(--amber2);">1</b>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button id="startBtn">دخول غرفة العمليات</button>
+        <button id="settingsBtn" style="background:rgba(255,255,255,0.04); border-color:var(--dim2); color:var(--text);">⚙ الإعدادات</button>
+      </div>
       <button id="installBtn" style="display:none; margin-top:10px;">📲 تثبيت التطبيق على الهاتف</button>
+    </div>
+
+    <!-- لوحة الإعدادات -->
+    <div class="glass panel" id="settingsPanel" style="display:none;">
+      <div id="simBadge">⚙ الإعدادات</div>
+      <h1 style="font-size:22px;">اعدادات اللعبة</h1>
+      <p style="margin-bottom:10px;">اختر لغة الكلمات التي تنزل عليك أثناء اللعب.</p>
+      <div style="display:flex; gap:10px; justify-content:center; margin-bottom:22px;">
+        <button id="langArBtn" data-lang="ar">🇮🇶 عربي</button>
+        <button id="langEnBtn" data-lang="en">🇬🇧 English</button>
+      </div>
+      <button id="settingsBackBtn">رجوع</button>
     </div>
   </div>
 
@@ -287,6 +378,16 @@
         </g>
         <g class="awakenSpin">
           <circle cx="140" cy="140" r="60" class="awakenRingActive r3"/>
+        </g>
+        <g id="awakenBeams">
+          <line class="awakenBeam" x1="140" y1="140" x2="140" y2="20"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="230" y2="70"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="260" y2="140"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="230" y2="210"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="140" y2="260"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="50" y2="210"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="20" y2="140"/>
+          <line class="awakenBeam" x1="140" y1="140" x2="50" y2="70"/>
         </g>
         <g id="awakenNodes">
           <circle class="awakenNode" cx="140" cy="20" r="4"/>
@@ -350,6 +451,7 @@
   <input id="mobileInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   <div id="qualityTag"></div>
 
+  <div id="irisWipe"></div>
   <div id="scanlines"></div>
   <div id="vignette"></div>
   <div id="flashLayer"></div>
@@ -362,14 +464,10 @@
 /* =========================================================
    إعدادات عامة
 ========================================================= */
-const WORDS = [
-  "برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
-  "دفاع","كود","ذاكرة","معالج","بروتوكول","منفذ","جدار","تحليل","تسجيل","دخول",
-  "كلمة","مرور","سحابة","تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","مصفوفة",
-  "خوارزمية","استعلام","اتصال","اشارة","بروكسي","جلسة","صلاحية","مفتاح","توقيع","سجل"
-];
 const AWAKEN_LABELS = ["تم التحقق", "تم التأمين", "جاهز"];
 const BEST_KEY = "wordSniperBestScore";
+const BEST_LEVEL_KEY = "wordSniperBestLevel";
+const SETTINGS_KEY = "wordSniperSettings";
 
 /* =========================================================
    كشف قوة الجهاز -> ضبط مستوى الجودة تلقائياً
@@ -410,14 +508,7 @@ function applyTierClass(){
 applyTierClass();
 
 /* =========================================================
-   محرك الصوت — مُركّب بالكامل عبر Web Audio API (بدون أي ملفات خارجية)
-   يغطي كل حدث بصري بالعبة بصوت مطابق: الإقلاع، التنبيه، العد التنازلي،
-   الكتابة، الانفجار، خسارة الروح، صعود المستوى، نهاية اللعبة.
-========================================================= */
-/* =========================================================
-   Audio Manager احترافي — Web Audio API
-   يحمّل مسبقاً فقط الملفات الحقيقية المرفقة (sounds/*)
-   لا يوجد أي مرجع أو صوت من النظام القديم — حُذف بالكامل
+   محرك الصوت — Web Audio API
 ========================================================= */
 const SOUND_FILES = {
   waitingLoop:  { src:'sounds/waiting-loop.mp3',   volume:0.35 },
@@ -442,7 +533,7 @@ const SOUND_FILES = {
 const AudioMgr = (() => {
   let ctx = null, master = null;
   const buffers = {};
-  const activeLoops = {}; // name -> {source, gain}
+  const activeLoops = {};
   let unlocked = false, loaded = false;
 
   function ensureCtx(){
@@ -483,7 +574,6 @@ const AudioMgr = (() => {
     window.addEventListener(ev, unlock, { once:true, passive:true })
   );
 
-  // تشغيل صوت لمرة واحدة (One-shot) — مع تنويع طفيف بالـ pitch لتفادي التكرار الممل
   function play(name, { rateJitter=0.04, gainMul=1, delay=0 } = {}){
     const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
     if(!c || !buf || !cfg) return null;
@@ -497,7 +587,6 @@ const AudioMgr = (() => {
     return src;
   }
 
-  // تشغيل حلقة مستمرة (Loop) بدخول تدريجي — للأجواء الخلفية (Ambient)
   function playLoop(name, { fadeInDur=1.2, gainMul=1 } = {}){
     const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
     if(!c || !buf || !cfg) return;
@@ -528,7 +617,6 @@ const AudioMgr = (() => {
     delete activeLoops[name];
   }
 
-  // تشغيل جزء مقصوص فقط من ملف طويل (offset/duration) — مفيد للـ kick القصير من ملف أطول
   function playClip(name, offset=0, duration=1.0, gainMul=1){
     const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
     if(!c || !buf || !cfg) return;
@@ -560,11 +648,27 @@ const timeEl = document.getElementById('timeStat');
 const hud = document.getElementById('hud');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
+const startPanel = document.getElementById('startPanel');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsBackBtn = document.getElementById('settingsBackBtn');
+const langArBtn = document.getElementById('langArBtn');
+const langEnBtn = document.getElementById('langEnBtn');
+const bestScoreLabel = document.getElementById('bestScoreLabel');
+const bestLevelLabel = document.getElementById('bestLevelLabel');
 const coreEl = document.getElementById('core');
 const awakenScene = document.getElementById('awakenScene');
 const awakenLabel = document.getElementById('awakenLabel');
 const awakenCenterMark = document.querySelector('#awakenCenterMark svg');
 const awakenNodes = document.querySelectorAll('.awakenNode');
+const awakenBeams = document.querySelectorAll('.awakenBeam');
+const irisWipe = document.getElementById('irisWipe');
+function wait(ms){ return new Promise(r=> setTimeout(r, ms)); }
+function irisSet(closed, fast){
+  irisWipe.classList.add('animate');
+  irisWipe.classList.toggle('fastBlink', !!fast);
+  irisWipe.classList.toggle('closed', !!closed);
+}
 const breachOverlay = document.getElementById('breachOverlay');
 const breachTitle = document.getElementById('breachTitle');
 const breachSub = document.getElementById('breachSub');
@@ -581,6 +685,121 @@ const comboNum = document.getElementById('comboNum');
 const comboBarFill = document.getElementById('comboBarFill');
 
 /* =========================================================
+   الإعدادات (اللغة) + أفضل نتيجة/مستوى — محفوظة بالمتصفح
+========================================================= */
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && (parsed.lang === 'ar' || parsed.lang === 'en')) return parsed;
+    }
+  }catch(e){}
+  return { lang:'ar' };
+}
+const SETTINGS = loadSettings();
+
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }catch(e){}
+}
+
+function getBestScore(){ return parseInt(localStorage.getItem(BEST_KEY) || '0', 10); }
+function getBestLevel(){ return parseInt(localStorage.getItem(BEST_LEVEL_KEY) || '1', 10); }
+
+function refreshBestLabels(){
+  bestScoreLabel.textContent = getBestScore();
+  bestLevelLabel.textContent = getBestLevel();
+}
+refreshBestLabels();
+
+function refreshLangButtons(){
+  langArBtn.style.background = SETTINGS.lang === 'ar' ? 'rgba(63,232,201,0.26)' : '';
+  langArBtn.style.boxShadow = SETTINGS.lang === 'ar' ? '0 0 14px rgba(63,232,201,.4)' : '';
+  langEnBtn.style.background = SETTINGS.lang === 'en' ? 'rgba(63,232,201,0.26)' : '';
+  langEnBtn.style.boxShadow = SETTINGS.lang === 'en' ? '0 0 14px rgba(63,232,201,.4)' : '';
+}
+refreshLangButtons();
+
+settingsBtn.addEventListener('click', ()=>{
+  startPanel.style.display = 'none';
+  settingsPanel.style.display = 'block';
+});
+settingsBackBtn.addEventListener('click', ()=>{
+  settingsPanel.style.display = 'none';
+  startPanel.style.display = 'block';
+});
+langArBtn.addEventListener('click', ()=>{ SETTINGS.lang='ar'; saveSettings(); refreshLangButtons(); });
+langEnBtn.addEventListener('click', ()=>{ SETTINGS.lang='en'; saveSettings(); refreshLangButtons(); });
+
+/* =========================================================
+   بنوك الكلمات — عربي / إنكليزي، ومقسّمة حسب الصعوبة
+   (يمكن دمج كلمتين أو ثلاث حسب المستوى لبناء "عبارة")
+========================================================= */
+const WORD_BANK = {
+  ar: {
+    easy: [
+      "كود","ملف","نص","رقم","دخول","خروج","حفظ","مسح","نسخ","لصق",
+      "قفل","فتح","بحث","جهاز","شاشة","لوحة","فأرة","صوت","صورة","فيديو",
+      "زر","نافذة","قائمة","سطر","عمود","صف","خط","لون","حجم","وزن"
+    ],
+    medium: [
+      "برمجة","حماية","اختراق","شبكة","خادم","بيانات","نظام","تشفير","ثغرة","هجوم",
+      "دفاع","ذاكرة","معالج","منفذ","جدار","تحليل","تسجيل","كلمة","مرور","سحابة",
+      "تطبيق","مصدر","تعليمات","متغير","دالة","صفيف","اتصال","اشارة","جلسة","مفتاح",
+      "توقيع","سجل","متصفح","تحديث","نسخة","مجلد","رابط","موقع","خدمة","واجهة"
+    ],
+    hard: [
+      "بروتوكول","خوارزمية","استعلام","بروكسي","صلاحية","تشفير متقدم","جدار ناري","هجوم سيبراني",
+      "اختراق شبكة","تحليل بيانات","نظام تشغيل","ذاكرة عشوائية","معالج مركزي","قاعدة بيانات",
+      "شبكة افتراضية","بروتوكول امن","تسجيل دخول","كلمة سر","توقيع رقمي","نسخة احتياطية",
+      "تحديث امني","ثغرة خطيرة","دفاع سيبراني","تحقق هوية","تشفير بيانات","مصادقة ثنائية"
+    ]
+  },
+  en: {
+    easy: [
+      "code","file","text","save","open","exit","copy","paste","lock","key",
+      "search","mouse","sound","image","video","button","window","line","color","size",
+      "port","link","host","node","byte","cache","input","output","array","stack"
+    ],
+    medium: [
+      "network","server","cipher","attack","defense","memory","kernel","firewall","exploit","backup",
+      "session","script","binary","packet","router","token","socket","thread","process","payload",
+      "malware","phishing","browser","update","folder","service","hacker","breach","access","protocol"
+    ],
+    hard: [
+      "encryption","algorithm","database","injection","ransomware","authentication","vulnerability",
+      "cybersecurity","private key","public key","secure login","access control","data breach",
+      "brute force","zero day","network scan","firewall rule","two factor","packet sniff",
+      "buffer overflow","denial of service","penetration test","digital signature","threat detection"
+    ]
+  }
+};
+
+function pickFrom(pool){ return pool[(Math.random()*pool.length)|0]; }
+
+/* تحديد عدد الكلمات المطلوبة حسب المستوى: 
+   1-3 سهل (كلمة واحدة قصيرة) — 4-7 متوسط (احتمال كلمتين يزيد مع المستوى)
+   8+ صعب (كلمتان الى ثلاث، احتمال الثلاث يزيد مع المستوى) */
+function buildPhrase(level){
+  const dict = WORD_BANK[SETTINGS.lang] || WORD_BANK.ar;
+  let pool, count;
+  if(level <= 3){
+    pool = dict.easy; count = 1;
+  } else if(level <= 7){
+    pool = dict.medium;
+    const chance2 = Math.min(0.75, (level-3)/5);
+    count = Math.random() < chance2 ? 2 : 1;
+  } else {
+    pool = dict.hard;
+    const chance3 = Math.min(0.7, (level-7)/9);
+    count = Math.random() < chance3 ? 3 : 2;
+  }
+  const parts = [];
+  for(let i=0;i<count;i++) parts.push(pickFrom(pool));
+  return parts;
+}
+
+/* =========================================================
    خلفية المصفوفة المتحركة (Canvas خفيف الأداء، DPR مضبوط)
 ========================================================= */
 const matrixChars = '01アイウエオカキクケコ01ABCDEF#$%&{}[]<>/\\'.split('');
@@ -589,7 +808,7 @@ let mCols = [], stageW = 0, stageH = 0;
 function resizeCanvases(){
   stageW = stage.clientWidth; stageH = stage.clientHeight;
   const dpr = Quality.cfg.dpr;
-  const bgDpr = Math.min(dpr, 1); // خلفية زخرفية، دقة retina كاملة غير ضرورية وتكلف أداء كبير
+  const bgDpr = Math.min(dpr, 1);
   bgCanvas.width = stageW * bgDpr; bgCanvas.height = stageH * bgDpr;
   bgCanvas.style.width = stageW+'px'; bgCanvas.style.height = stageH+'px';
   fxCanvas.width = stageW * dpr; fxCanvas.height = stageH * dpr;
@@ -618,14 +837,13 @@ function drawBg(){
 }
 
 /* =========================================================
-   محرك جسيمات على Canvas مع Object Pooling (بديل الـDOM particles)
+   محرك جسيمات على Canvas مع Object Pooling
 ========================================================= */
 const Particles = (() => {
   const pool = [];
   const active = [];
-  function ease(t){ return 1 - Math.pow(1-t, 3); } // easeOutCubic
+  function ease(t){ return 1 - Math.pow(1-t, 3); }
 
-  // sprites glow جاهزة مسبقاً بدل shadowBlur (رسم مسبق مرة واحدة فقط، ثم drawImage السريع)
   const glowSprites = {};
   function getGlowSprite(color){
     if(glowSprites[color]) return glowSprites[color];
@@ -713,7 +931,7 @@ const Particles = (() => {
 })();
 
 /* =========================================================
-   اهتزاز الشاشة بمنحنى تخميد (بدل اهتزاز خام)
+   اهتزاز الشاشة بمنحنى تخميد
 ========================================================= */
 const Shake = (() => {
   let intensity = 0, t = 0;
@@ -795,21 +1013,45 @@ function resetCombo(){
 ========================================================= */
 function spawnWord(){
   if(!running) return;
-  const text = WORDS[(Math.random()*WORDS.length)|0];
+  const parts = buildPhrase(level);
+  const fullText = parts.join(''); // بدون مسافات لغرض المطابقة أثناء الكتابة
+  const displayText = parts.join(' ');
   const el = document.createElement('div');
   el.className = 'word';
-  el.innerHTML = `<span class="typed"></span><span class="rest">${text}</span>`;
+  el.innerHTML = `<span class="typed"></span><span class="rest">${displayText}</span>`;
   world.appendChild(el);
-  const x = Math.random() * (stageW - 150) + 20;
-  el.style.transform = `translate3d(${x}px,-46px,0)`;
-  requestAnimationFrame(()=> el.classList.add('in'));
-  const speed = (0.42 + level*0.11 + Math.random()*0.18) * 0.06; // px/ms
-  words.push({el, text, x, typedCount:0, y:-46, speed, danger:false, hitUntil:0});
+  const x = Math.random() * (stageW - Math.max(150, displayText.length*11)) + 20;
+  el.style.transform = `translate3d(${x}px,-74px,0) scale(0.9)`;
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      el.classList.add('in');
+      el.style.transform = `translate3d(${x}px,-46px,0) scale(1)`;
+    });
+  });
+  const speed = (0.42 + level*0.12 + Math.random()*0.18) * 0.06; // px/ms
+  words.push({el, words:parts, text: fullText, x, typedCount:0, y:-46, speed, danger:false, hitUntil:0});
 }
 
 function renderWordProgress(w){
-  w.el.querySelector('.typed').textContent = w.text.slice(0, w.typedCount);
-  w.el.querySelector('.rest').textContent = w.text.slice(w.typedCount);
+  let count = w.typedCount;
+  let displayTyped = '';
+  let displayRest = '';
+  for(let i=0;i<w.words.length;i++){
+    const word = w.words[i];
+    const sep = i < w.words.length-1 ? ' ' : '';
+    if(count >= word.length){
+      displayTyped += word + sep;
+      count -= word.length;
+    } else if(count > 0){
+      displayTyped += word.slice(0,count);
+      displayRest += word.slice(count) + sep;
+      count = 0;
+    } else {
+      displayRest += word + sep;
+    }
+  }
+  w.el.querySelector('.typed').textContent = displayTyped;
+  w.el.querySelector('.rest').textContent = displayRest;
 }
 
 function explode(w){
@@ -825,16 +1067,17 @@ function explode(w){
   Particles.spawnRing(cx, cy, '#ffb454');
   if(mult >= 3) Particles.spawnRing(cx, cy, '#3fe8c9');
 
-  w.el.style.transition = 'transform .18s ease-out, opacity .18s ease-out, filter .18s';
+  w.el.style.transition = 'transform .22s cubic-bezier(.16,.9,.3,1), opacity .22s ease-out, filter .22s ease-out';
   w.el.style.transform = `translate3d(${w.x}px,${w.y}px,0) scale(1.7)`;
   w.el.style.opacity = '0';
-  w.el.style.filter = 'brightness(2)';
-  setTimeout(()=> w.el.remove(), 180);
+  w.el.style.filter = 'brightness(2) drop-shadow(0 0 20px rgba(255,180,84,.45))';
+  setTimeout(()=> w.el.remove(), 240);
 
+  flashLayer.style.background = '#fff';
   flashLayer.style.transition = 'none';
-  flashLayer.style.opacity = mult >= 3 ? '0.22' : '0.1';
+  flashLayer.style.opacity = mult >= 3 ? '0.18' : '0.1';
   requestAnimationFrame(()=>{
-    flashLayer.style.transition = 'opacity .22s ease';
+    flashLayer.style.transition = 'opacity .24s ease';
     flashLayer.style.opacity = '0';
   });
 
@@ -854,10 +1097,20 @@ function explode(w){
 }
 
 function loseLife(w){
-  w.el.remove();
+  w.el.classList.add('glitch');
+  w.el.style.transition = 'transform .36s ease, opacity .36s ease, filter .36s ease';
+  w.el.style.transform = `translate3d(${w.x}px,${w.y}px,0) scale(1.04)`;
+  w.el.style.opacity = '0';
+  w.el.style.filter = 'blur(3px)';
+  setTimeout(()=> w.el.remove(), 380);
+
+  const rect = w.el.getBoundingClientRect();
+  const stageRect = stage.getBoundingClientRect();
+  Particles.spawnBurst(rect.left-stageRect.left + rect.width/2, rect.top-stageRect.top + rect.height/2, ['#ff3b4e','#ff8291'], 12, 2.2);
+
   lives--;
   resetCombo();
-  Shake.trigger(9);
+  Shake.trigger(7.5);
   redFlashBrief();
   AudioMgr.play('error');
   if(lives === 1) AudioMgr.playLoop('heartbeat', { fadeInDur:0.6 });
@@ -896,9 +1149,8 @@ function mainLoop(now){
   if(!lastFrame) lastFrame = now;
   let dt = now - lastFrame;
   lastFrame = now;
-  dt = Math.min(dt, 48); // تفادي قفزات كبيرة عند تبديل التبويب
+  dt = Math.min(dt, 48);
 
-  // قياس FPS للتحكم بالجودة تلقائياً
   fpsAccum += dt; fpsFrames++;
   if(fpsAccum >= 500){
     Quality.sampleFps(1000/(fpsAccum/fpsFrames));
@@ -917,7 +1169,7 @@ function mainLoop(now){
       w.y += w.speed*dt;
       let tx = w.x, ty = w.y, sc = 1;
       if(w.hitUntil > now){
-        const remain = (w.hitUntil - now) / 170; // 1 -> 0
+        const remain = (w.hitUntil - now) / 170;
         tx += (Math.random()*2-1) * 5 * remain;
         ty += (Math.random()*2-1) * 3 * remain;
         sc = 1 + 0.09 * remain;
@@ -943,18 +1195,27 @@ function mainLoop(now){
 requestAnimationFrame(mainLoop);
 
 /* =========================================================
-   الكتابة (كيبورد فعلي + إدخال جوال)
+   الكتابة (كيبورد فعلي + إدخال جوال) — تدعم العربي والإنكليزي
 ========================================================= */
+function isLetterKey(key){
+  if(key.length !== 1) return false;
+  return SETTINGS.lang === 'ar' ? /[\u0621-\u064A]/.test(key) : /[a-zA-Z]/.test(key);
+}
+function normKey(key){
+  return SETTINGS.lang === 'en' ? key.toLowerCase() : key;
+}
+
 function handleKey(e){
   if(!running) return;
-  const key = e.key;
-  if(key.length !== 1 || !/[\u0621-\u064A]/.test(key)) return;
+  const rawKey = e.key;
+  if(!isLetterKey(rawKey)) return;
+  const key = normKey(rawKey);
 
   if(activeWord && !words.includes(activeWord)) activeWord = null;
 
   if(activeWord){
     keysTotal++;
-    if(activeWord.text[activeWord.typedCount] === key){
+    if(normKey(activeWord.text[activeWord.typedCount]) === key){
       keysCorrect++;
       activeWord.typedCount++;
       activeWord.hitUntil = performance.now() + 170;
@@ -971,7 +1232,7 @@ function handleKey(e){
     return;
   }
 
-  const candidates = words.filter(w => w.text[0] === key);
+  const candidates = words.filter(w => normKey(w.text[0]) === key);
   if(candidates.length === 0) return;
   keysTotal++; keysCorrect++;
   candidates.sort((a,b)=> b.y - a.y);
@@ -1013,18 +1274,31 @@ function startGame(){
   spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
 }
 
+function saveProgress(){
+  const best = Math.max(score, getBestScore());
+  localStorage.setItem(BEST_KEY, best);
+  const bestLvl = Math.max(level, getBestLevel());
+  localStorage.setItem(BEST_LEVEL_KEY, bestLvl);
+  refreshBestLabels();
+}
+
 function levelUp(){
   level++;
   updateHud();
+  saveProgress();
   running = false;
   clearInterval(spawnTimer);
   AudioMgr.play('victory');
   levelUpOverlay.style.display = 'flex';
+  levelUpOverlay.classList.add('show');
   setTimeout(()=>{
-    levelUpOverlay.style.display = 'none';
-    running = true;
-    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
-  }, 1400);
+    levelUpOverlay.classList.remove('show');
+    setTimeout(()=>{
+      levelUpOverlay.style.display = 'none';
+      running = true;
+      spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
+    }, 280);
+  }, 1300);
 }
 
 function endGame(won){
@@ -1038,8 +1312,8 @@ function endGame(won){
 
   const elapsed = Math.floor((Date.now()-startTime)/1000);
   const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
-  const best = Math.max(score, parseInt(localStorage.getItem(BEST_KEY) || '0', 10));
-  localStorage.setItem(BEST_KEY, best);
+  saveProgress();
+  const best = getBestScore();
 
   AudioMgr.play('glitchEffect', { gainMul:0.6 });
 
@@ -1057,46 +1331,87 @@ function endGame(won){
     <button id="startBtn">إعادة المهمة</button>
   `;
   overlay.style.display = 'flex';
+  overlay.classList.add('show');
   if(AudioMgr.isLoaded) AudioMgr.playLoop('waitingLoop', { fadeInDur:1.2 });
   document.getElementById('startBtn').addEventListener('click', beginSequence);
 }
 
 /* =========================================================
-   المقدمة السينمائية: استيقاظ المركز -> الاختراق -> الدفاع -> عد تنازلي
+   المقدمة السينمائية
 ========================================================= */
+
+async function performEyeBlinks(){
+  for(let i=0;i<2;i++){
+    irisSet(true, true);
+    Shake.trigger(3);
+    AudioMgr.play('uiHit', { gainMul:0.4, rateJitter:0.25 });
+    await wait(90);
+    irisSet(false, true);
+    await wait(190);
+  }
+}
+
+async function irisTransitionToBreach(){
+  irisSet(true, false);
+  Shake.trigger(4);
+  await wait(600);
+  awakenScene.classList.remove('show');
+  awakenScene.style.display = 'none';
+  await wait(140);
+  irisSet(false, false);
+  await wait(600);
+}
 
 async function playAwakenSequence(){
   awakenScene.style.display = 'flex';
-  awakenLabel.classList.remove('show');
-  awakenCenterMark.classList.remove('show');
-  awakenNodes.forEach(n=> n.classList.remove('on'));
+  awakenLabel.classList.remove('show','punch');
+  awakenCenterMark.classList.remove('show','opening');
+  awakenNodes.forEach(n=> n.classList.remove('on','pulse'));
+  awakenBeams.forEach(b=> b.classList.remove('on'));
+  irisSet(false, false);
+  irisWipe.classList.remove('animate');
 
   requestAnimationFrame(()=> requestAnimationFrame(()=> awakenScene.classList.add('show')));
 
-  // الحلقات تُرسم بصرياً (CSS)، والعقد تضيء واحدة تلو الأخرى بدل أي نص
-  await new Promise(r=> setTimeout(r, 500));
+  await wait(500);
+
+  // إضاءة العقد الثماني مع خطوط طاقة تمتد من المركز الى كل عقدة
   for(let i=0;i<awakenNodes.length;i++){
     awakenNodes[i].classList.add('on');
+    if(awakenBeams[i]) awakenBeams[i].classList.add('on');
     AudioMgr.play('uiHit', { gainMul:0.4, rateJitter:0.08 });
-    await new Promise(r=> setTimeout(r, 110));
+    await wait(105);
   }
+  awakenNodes.forEach(n=> n.classList.add('pulse'));
+  AudioMgr.play('whoosh', { gainMul:0.4 });
+  await wait(200);
 
-  // 3 كلمات قصيرة جداً بس، كل وحدة تظهر وتختفي
+  // ظهور تسميات الحالة بحركة "دفعة" قوية بدل التلاشي البسيط
   for(const label of AWAKEN_LABELS){
     awakenLabel.textContent = label;
-    awakenLabel.classList.add('show');
-    await new Promise(r=> setTimeout(r, 480));
+    awakenLabel.classList.remove('punch');
+    void awakenLabel.offsetWidth;
+    awakenLabel.classList.add('show','punch');
+    AudioMgr.play('uiHit', { gainMul:0.35, rateJitter:0.15 });
+    await wait(480);
     awakenLabel.classList.remove('show');
-    await new Promise(r=> setTimeout(r, 140));
+    await wait(140);
   }
 
-  awakenCenterMark.classList.add('show');
+  // فتح "العين" المركزية — كشف تدريجي من نقطة الى الشكل الكامل بدل ظهور مسطح
+  awakenCenterMark.classList.add('opening');
   AudioMgr.play('whoosh');
-  await new Promise(r=> setTimeout(r, 700));
+  Shake.trigger(2.5);
+  await wait(260);
+  awakenCenterMark.classList.add('show');
+  await wait(420);
 
-  awakenScene.classList.remove('show');
-  await new Promise(r=> setTimeout(r, 500));
-  awakenScene.style.display = 'none';
+  // رمشتان سريعتان
+  await performEyeBlinks();
+  await wait(180);
+
+  // اغلاق العين ببطء والانتقال السينمائي الى مشهد الاختراق
+  await irisTransitionToBreach();
 }
 
 function revealWords(el, text, startDelay, stepDelay){
@@ -1134,21 +1449,17 @@ async function playBreachSequence(){
   breachOverlay.style.display = 'flex';
   requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
 
-  // 1) الرادار + الشارة يظهرون، تشويش خفيف مصاحب لظهور المشهد
   AudioMgr.play('hackStatic', { gainMul:0.8 });
   await new Promise(r=> setTimeout(r, 500));
   AudioMgr.play('alarm', { gainMul:0.7 });
   await new Promise(r=> setTimeout(r, 800));
   breachTitle.classList.add('pulse');
 
-  // 2) الوصف يظهر
   breachSub.classList.add('show');
   await new Promise(r=> setTimeout(r, 550));
 
-  // 3) حالة التفعيل تظهر أخيراً
   breachStatus.classList.add('show');
 
-  // 4) وقت قراءة كافٍ قبل الانتقال (المشهد كامل ~5.5 ثانية)
   await new Promise(r=> setTimeout(r, 3200));
 
   AudioMgr.play('hackEnd');
@@ -1160,22 +1471,28 @@ async function playBreachSequence(){
 
 async function playDefenseSequence(){
   defenseOverlay.style.display = 'flex';
+  defenseOverlay.classList.add('show');
   countdownNum.textContent = '';
   await new Promise(r=> setTimeout(r, 500));
 
-  // العد التنازلي: كل رقم متزامن حرفياً مع ملفه الصوتي الخاص، بدون أي تداخل
   const steps = [ {num:'٣', snd:'count3'}, {num:'٢', snd:'count2'}, {num:'١', snd:'count1'} ];
   for(const step of steps){
     countdownNum.textContent = step.num;
-    countdownNum.style.animation = 'none';
+    countdownNum.classList.remove('countdownActive');
     void countdownNum.offsetWidth;
-    countdownNum.style.animation = 'fadeUp .4s ease';
+    countdownNum.classList.add('countdownActive');
     AudioMgr.play(step.snd);
-    await new Promise(r=> setTimeout(r, 780));
+    setTimeout(()=>{
+      flashLayer.style.background = '#7cf9e0';
+      flashLayer.style.opacity = '0.18';
+      requestAnimationFrame(()=>{ flashLayer.style.transition = 'opacity .28s ease'; flashLayer.style.opacity = '0'; });
+    }, 120);
+    await new Promise(r=> setTimeout(r, 820));
   }
 
-  // ضربة انتقال قصيرة (أول 900ms فقط من الملف) ثم اللعبة تبدأ فوراً
   AudioMgr.playClip('kickImpact', 0, 0.9);
+  defenseOverlay.classList.remove('show');
+  await new Promise(r=> setTimeout(r, 280));
   defenseOverlay.style.display = 'none';
 }
 
@@ -1183,6 +1500,8 @@ async function beginSequence(){
   AudioMgr.stopLoop('waitingLoop', 0.4);
   AudioMgr.play('uiHit');
   overlay.style.display = 'none';
+  settingsPanel.style.display = 'none';
+  startPanel.style.display = 'block';
   resizeCanvases();
   await playAwakenSequence();
   AudioMgr.playLoop('glitchAmbient', { fadeInDur:1.0 });
@@ -1220,7 +1539,7 @@ setInterval(()=>{
 }, 3000);
 
 /* =========================================================
-   إيقاف مؤقت تلقائي عند إخفاء التبويب (لتفادي قفزات Delta Time)
+   إيقاف مؤقت تلقائي عند إخفاء التبويب
 ========================================================= */
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){ lastFrame = 0; }
@@ -1251,9 +1570,6 @@ if('serviceWorker' in navigator){
   });
 }
 
-/* =========================================================
-   تشغيل الخلفية عند البدء
-========================================================= */
 resizeCanvases();
 
 })();
