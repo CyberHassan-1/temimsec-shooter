@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>قناص الكلمات</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#03050a">
@@ -22,7 +22,7 @@
   html,body{width:100%; height:100%; overflow:hidden; background:var(--void); font-family:'Segoe UI',Tahoma,sans-serif; color:var(--text); user-select:none;}
 
   /* ===== المسرح ===== */
-  #stage{position:relative; width:100%; height:100vh; overflow:hidden;
+  #stage{position:relative; width:100%; height:100vh; height:100dvh; overflow:hidden;
     background: radial-gradient(ellipse at 50% 15%, var(--void3), var(--void) 75%); }
 
   #world{position:absolute; inset:0; z-index:1; transform-origin:50% 90%; will-change:transform;}
@@ -227,7 +227,7 @@
 
   /* ===== شاشات البداية / النهاية ===== */
   #overlay{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:rgba(5,7,13,0.92); z-index:20; text-align:center; padding:20px; backdrop-filter:blur(10px);}
+    background:rgba(5,7,13,0.92); z-index:42; text-align:center; padding:20px; backdrop-filter:blur(10px);}
   #overlay .panel{ opacity:0; transform:translateY(18px) scale(0.96); animation: panelEnter .82s cubic-bezier(.16,.9,.3,1) forwards; }
   #overlay.show .panel{ opacity:1; transform:translateY(0) scale(1); }
   #simBadge{ opacity:0; transform:translateY(8px); animation: panelItemIn .55s ease forwards .1s; }
@@ -280,9 +280,73 @@
     #overlay h1{ font-size:24px;} #overlay .panel{ padding:26px 22px;}
     #breachTitle{ font-size:28px;} #defenseTitle{ font-size:22px;} #countdownNum{ font-size:64px;}
     button{ font-size:13px; padding:10px 24px;}
-    #tapHint{ display:block;}
+    #stage.playing #tapHint{ display:block;}
     #awakenCore{ width:200px; height:200px;} #awakenLabel{ font-size:12px; letter-spacing:2px;}
     #comboNum{ font-size:24px;}
+  }
+
+  /* ===== إضافات النسخة المطوّرة ===== */
+  .word.live{ transition: opacity .42s ease, filter .42s ease, box-shadow .3s ease, border-color .2s ease; }
+  .word.wrong{ border-color:var(--danger); box-shadow:0 0 18px rgba(255,59,78,.55); }
+
+  #boot{ position:absolute; inset:0; z-index:90; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:radial-gradient(ellipse at 50% 40%, #07121c, #02040a 75%); transition:opacity .7s ease; text-align:center; padding:24px; cursor:pointer; }
+  #boot.hide{ opacity:0; pointer-events:none; }
+  #bootLogo{ width:92px; height:46px; filter:drop-shadow(0 0 14px rgba(63,232,201,.7)); animation:logoPulse 2.2s ease-in-out infinite; }
+  #bootTitle{ font-size:30px; font-weight:900; color:var(--core2); letter-spacing:3px; text-shadow:0 0 18px rgba(63,232,201,.55); }
+  #bootBar{ width:min(260px,70vw); height:4px; border-radius:4px; background:var(--dim2); overflow:hidden; }
+  #bootFill{ height:100%; width:0%; background:linear-gradient(90deg,var(--amber),var(--core)); box-shadow:0 0 10px rgba(63,232,201,.6); transition:width .25s ease; }
+  #bootPct{ font-size:11px; color:var(--dim); letter-spacing:2px; direction:ltr; }
+  #bootMsg{ font-size:12px; color:var(--dim); letter-spacing:1px; min-height:18px; }
+  #bootEnter{ display:none; margin-top:6px; animation:enterBlink 1.6s ease-in-out infinite; }
+  @keyframes enterBlink{ 0%,100%{ box-shadow:0 0 0 rgba(63,232,201,0); } 50%{ box-shadow:0 0 22px rgba(63,232,201,.55); } }
+  @keyframes logoPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.07); } }
+
+  #pauseBtn{ pointer-events:auto; padding:4px 12px; font-size:11px; letter-spacing:1px; background:rgba(14,22,36,.82);
+    border:1px solid var(--glass-border); color:var(--dim); border-radius:12px; }
+  #pauseOverlay{ position:absolute; inset:0; z-index:55; display:none; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(3,5,10,.8); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); text-align:center; gap:16px; }
+  #pauseOverlay h2{ font-size:28px; color:var(--amber2); letter-spacing:2px; text-shadow:0 0 18px rgba(255,180,84,.5); }
+  .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  #awakenScene, #breachOverlay, #defenseOverlay, #levelUpOverlay{ pointer-events:none; }
+  #skipBtn{ position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:70; display:none; font-size:12px; padding:8px 20px;
+    background:rgba(5,7,13,.6); border-color:var(--dim2); color:var(--dim); }
+
+  #crtLayer{ position:absolute; inset:0; z-index:40; pointer-events:none; display:none; background:#000; }
+  #crtLayer.on{ display:block; animation:crtBlack 1s ease forwards; }
+  #crtLayer i{ position:absolute; left:0; right:0; top:50%; height:3px; margin-top:-1.5px; background:#dffff8;
+    box-shadow:0 0 22px 6px rgba(63,232,201,.85); animation:crtLine 1s ease forwards; }
+  @keyframes crtBlack{ 0%{ opacity:0; } 25%{ opacity:1; } 100%{ opacity:1; } }
+  @keyframes crtLine{ 0%,20%{ transform:scaleY(160); opacity:0; } 38%{ transform:scale(1,1); opacity:1; } 78%{ transform:scale(1,1); opacity:1; } 100%{ transform:scale(0,1); opacity:0; } }
+
+  #gradeBox{ display:flex; flex-direction:column; align-items:center; margin:0 0 12px; }
+  #gradeLetter{ font-size:64px; font-weight:900; line-height:1; color:var(--amber2); text-shadow:0 0 26px rgba(255,180,84,.6); opacity:.25; }
+  #gradeLetter.pop{ animation:gradePop .6s cubic-bezier(.2,1.6,.3,1); }
+  @keyframes gradePop{ 0%{ transform:scale(2.2); filter:blur(6px); } 100%{ transform:scale(1); filter:blur(0); } }
+  #gradeLbl{ font-size:10px; letter-spacing:3px; color:var(--dim); margin-top:4px; }
+  #newBest{ display:none; margin-bottom:12px; font-size:12.5px; color:var(--amber2); letter-spacing:1px; text-shadow:0 0 12px rgba(255,180,84,.5); }
+
+  .vrow{ display:flex; align-items:center; gap:10px; margin:10px 0; font-size:12.5px; color:var(--text); }
+  .vrow label{ min-width:84px; text-align:right; }
+  .vrow input[type=range]{ flex:1; accent-color:var(--core); min-width:0; }
+
+  #toast{ position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:95; display:none; max-width:90vw; text-align:center;
+    background:rgba(14,22,36,.95); border:1px solid var(--amber); color:var(--amber2); padding:8px 16px; border-radius:10px; font-size:12px; }
+
+  #startPanel h1{ animation: panelItemIn .58s ease forwards .18s, titleFlicker 6s steps(1) 1.5s infinite; }
+  @keyframes titleFlicker{
+    0%,92%,100%{ text-shadow:0 0 20px rgba(63,232,201,.5); }
+    93%{ text-shadow:-3px 0 rgba(255,59,78,.7), 3px 0 rgba(63,232,201,.7); }
+    95%{ text-shadow:3px 0 rgba(255,59,78,.7), -3px 0 rgba(63,232,201,.7); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    #startPanel h1{ animation: panelItemIn .01s forwards !important; }
+    #ambientFog, #digitalDust, #bootLogo, #bootEnter{ animation:none !important; }
+  }
+  @media (max-width:640px){
+    #gradeLetter{ font-size:52px; } #bootTitle{ font-size:26px; }
+    .vrow label{ min-width:70px; }
   }
 </style>
 </head>
@@ -312,6 +376,7 @@
     <div id="hudRight">
       <div class="glass">الدقة: <b id="accuracyStat">100%</b></div>
       <div class="glass">الزمن: <b id="timeStat">00:00</b></div>
+      <button id="pauseBtn" type="button" aria-label="إيقاف مؤقت">❚❚ إيقاف</button>
     </div>
   </div>
 
@@ -329,7 +394,7 @@
   </div>
 
   <!-- شاشة البداية -->
-  <div id="overlay">
+  <div id="overlay" style="display:none">
     <div class="glass panel" id="startPanel">
       <div id="simBadge">🛡️ محاكاة تدريبية — غرفة عمليات أمن سيبراني</div>
       <h1>قناص الكلمات</h1>
@@ -353,7 +418,33 @@
         <button id="langArBtn" data-lang="ar">🇮🇶 عربي</button>
         <button id="langEnBtn" data-lang="en">🇬🇧 English</button>
       </div>
+      <div style="margin:2px 0 16px;">
+        <div class="vrow"><label for="volM">الصوت العام</label><input type="range" id="volM" min="0" max="100" step="1"></div>
+        <div class="vrow"><label for="volMu">الموسيقى</label><input type="range" id="volMu" min="0" max="100" step="1"></div>
+        <div class="vrow"><label for="volSf">المؤثرات</label><input type="range" id="volSf" min="0" max="100" step="1"></div>
+      </div>
       <button id="settingsBackBtn">رجوع</button>
+    </div>
+
+    <!-- شاشة النهاية (لوحة مستقلة حتى لا تُمسح القائمة الرئيسية) -->
+    <div class="glass panel" id="endPanel" style="display:none;">
+      <h1 class="danger">فشلت مهمة الصد</h1>
+      <p>تمكّن الهجوم من اختراق دفاعات الخادم المحاكى. راجع إحصائياتك أدناه وحاول مجددًا.</p>
+      <div id="gradeBox"><div id="gradeLetter">–</div><div id="gradeLbl">التقييم</div></div>
+      <div id="newBest">🏆 رقم قياسي جديد!</div>
+      <div id="statsGrid">
+        <div class="glass box"><div class="lbl">النقاط</div><div class="val" id="stScore">0</div></div>
+        <div class="glass box"><div class="lbl">المستوى</div><div class="val" id="stLevel">1</div></div>
+        <div class="glass box"><div class="lbl">الدقة</div><div class="val" id="stAcc">0%</div></div>
+        <div class="glass box"><div class="lbl">الزمن</div><div class="val" id="stTime">00:00</div></div>
+        <div class="glass box"><div class="lbl">أفضل سلسلة</div><div class="val" id="stCombo">0</div></div>
+        <div class="glass box"><div class="lbl">كلمة/دقيقة</div><div class="val" id="stWpm">0</div></div>
+      </div>
+      <p style="margin-bottom:16px; font-size:12px;">أفضل نتيجة لك: <b id="stBest" style="color:var(--amber2);">0</b></p>
+      <div class="row">
+        <button id="retryBtn" type="button">إعادة المهمة</button>
+        <button id="menuBtn" type="button" style="background:rgba(255,255,255,0.04); border-color:var(--dim2); color:var(--text);">القائمة الرئيسية</button>
+      </div>
     </div>
   </div>
 
@@ -451,10 +542,31 @@
   <input id="mobileInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   <div id="qualityTag"></div>
 
+  <div id="pauseOverlay">
+    <h2>متوقف مؤقتًا</h2>
+    <div class="row">
+      <button id="resumeBtn" type="button">متابعة</button>
+      <button id="quitBtn" type="button" style="background:rgba(255,255,255,0.04); border-color:var(--dim2); color:var(--text);">القائمة الرئيسية</button>
+    </div>
+  </div>
+  <button id="skipBtn" type="button">تخطي المقدمة ⏭</button>
+  <div id="crtLayer"><i></i></div>
+
   <div id="irisWipe"></div>
   <div id="scanlines"></div>
   <div id="vignette"></div>
   <div id="flashLayer"></div>
+
+  <!-- شاشة الإقلاع: تحميل الأصوات ثم «المس للدخول» -->
+  <div id="boot">
+    <svg id="bootLogo" viewBox="0 0 120 60" aria-hidden="true"><polygon points="60,5 100,55 20,55" fill="none" stroke="#3fe8c9" stroke-width="3"/><circle cx="60" cy="40" r="8" fill="#3fe8c9" opacity="0.85"/></svg>
+    <div id="bootTitle">قناص الكلمات</div>
+    <div id="bootBar"><div id="bootFill"></div></div>
+    <div id="bootPct">0%</div>
+    <div id="bootMsg"></div>
+    <button id="bootEnter" type="button">المس للدخول</button>
+  </div>
+  <div id="toast" role="status"></div>
 </div>
 
 <script>
@@ -462,12 +574,19 @@
 "use strict";
 
 /* =========================================================
-   إعدادات عامة
+   إعدادات عامة + تخزين آمن (لا ينهار إذا كان التخزين محظورًا)
 ========================================================= */
 const AWAKEN_LABELS = ["تم التحقق", "تم التأمين", "جاهز"];
 const BEST_KEY = "wordSniperBestScore";
 const BEST_LEVEL_KEY = "wordSniperBestLevel";
 const SETTINGS_KEY = "wordSniperSettings";
+const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+const Store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, String(v)); }catch(e){} }
+};
+const $ = (id) => document.getElementById(id);
 
 /* =========================================================
    كشف قوة الجهاز -> ضبط مستوى الجودة تلقائياً
@@ -492,7 +611,7 @@ const Quality = (() => {
       if(avg < 42 && tier !== 'low'){
         tier = tier === 'high' ? 'mid' : 'low';
         lastDowngrade = now;
-        document.getElementById('qualityTag').textContent = 'جودة: ' + tier;
+        $('qualityTag').textContent = 'جودة: ' + tier;
         document.body.classList.remove('q-high','q-mid','q-low');
         document.body.classList.add('q-' + tier);
       }
@@ -500,212 +619,394 @@ const Quality = (() => {
   }
   return { get tier(){return tier;}, get cfg(){return cfg[tier];}, sampleFps };
 })();
-document.getElementById('qualityTag').textContent = 'جودة: ' + Quality.tier;
-function applyTierClass(){
-  document.body.classList.remove('q-high','q-mid','q-low');
-  document.body.classList.add('q-' + Quality.tier);
-}
-applyTierClass();
+$('qualityTag').textContent = 'جودة: ' + Quality.tier;
+document.body.classList.add('q-' + Quality.tier);
+
+/* =========================================================
+   جدول الأصوات
+   - mix  : مستوى الصوت النسبي بعد التطبيع التلقائي (1 = المستوى المرجعي)
+   - off/dur/fade : المقطع المستخدم فعليًا من الملف (بالثواني) — مبني على تحليل الملفات:
+       boom        : الضربة الحقيقية عند ~1.08ث  → نبدأ من 1.0 (كانت تتأخر ثانية كاملة)
+       kick-impact : صمت ثم ضربة عند 1.22ث        → نبدأ من 1.12 لتتطابق مع لحظة "انطلق"
+       alarm       : صمت حتى 1.6ث ثم الصفارة       → نبدأ من 1.6
+       victory     : المقدمة صامتة حتى 0.45ث        → نبدأ من 0.42
+       waiting-loop: يتلاشى بعد 27.2ث فتحصل فجوة   → نقطة لف عند 27.2
+       heartbeat   : نبضة كل 1.0ث تمامًا             → لف عند 8.0
+   - error.mp3 صامت تقريبًا (-70 LUFS) فاستُبدل بصوت مولَّد داخل اللعبة.
+========================================================= */
+const SOUND_FILES = {
+  waitingLoop:  { src:'sounds/waiting-loop.mp3',   jitter:0, mix:.30, bus:'mus', loop:[0,27.2] },
+  glitchAmbient:{ src:'sounds/glitch-ambient.mp3', jitter:0, mix:.30, bus:'mus', lazy:true },
+  hackStart:    { src:'sounds/hack-start.mp3',     jitter:0, mix:.85 },
+  hackStatic:   { src:'sounds/hack-static.mp3',    jitter:0, mix:.30, dur:6.6, fade:.5 },
+  hackEnd:      { src:'sounds/hack-end.mp3',       jitter:0, mix:.55, dur:4.2, fade:2.4 },
+  alarm:        { src:'sounds/alarm.mp3',          jitter:0, mix:.50, off:1.6, dur:4.6, fade:1.2 },
+  count1:       { src:'sounds/count-1.ogg',        jitter:0, mix:.90 },
+  count2:       { src:'sounds/count-2.ogg',        jitter:0, mix:.90 },
+  count3:       { src:'sounds/count-3.ogg',        jitter:0, mix:.90 },
+  kickImpact:   { src:'sounds/kick-impact.mp3',    jitter:0, mix:1.0, off:1.12, dur:4.6, fade:1.8 },
+  whoosh:       { src:'sounds/whoosh.mp3',         mix:.60, dur:1.6, fade:.4 },
+  uiHit:        { src:'sounds/ui-hit.mp3',         mix:.55, dur:.6,  fade:.25, max:3 },
+  boom:         { src:'sounds/boom.mp3',           mix:.70, off:1.0, dur:1.6, fade:.6, max:3 },
+  heartbeat:    { src:'sounds/heartbeat.mp3',      jitter:0, mix:.55, loop:[0,8.0] },
+  glitchEffect: { src:'sounds/glitch-effect.mp3',  mix:.70 },
+  victory:      { src:'sounds/victory.mp3',        jitter:0, mix:.80, off:.42, dur:1.7, fade:.3 }
+};
 
 /* =========================================================
    محرك الصوت — Web Audio API
+   سلسلة المعالجة: مصدر → ناقل (موسيقى/مؤثرات) → ماستر → ضاغط → حاد (Limiter) → المخرج
+   + تطبيع تلقائي لعلو كل ملف عند التحميل (لأن الملفات متفاوتة جدًا) + خفض الموسيقى تحت الضربات
 ========================================================= */
-const SOUND_FILES = {
-  waitingLoop:  { src:'sounds/waiting-loop.mp3',   volume:0.35 },
-  hackStart:    { src:'sounds/hack-start.mp3',     volume:0.7  },
-  hackStatic:   { src:'sounds/hack-static.mp3',    volume:0.55 },
-  hackEnd:      { src:'sounds/hack-end.mp3',       volume:0.7  },
-  glitchAmbient:{ src:'sounds/glitch-ambient.mp3', volume:0.16 },
-  glitchEffect: { src:'sounds/glitch-effect.mp3',  volume:0.6  },
-  alarm:        { src:'sounds/alarm.mp3',          volume:0.4  },
-  count1:       { src:'sounds/count-1.ogg',        volume:0.85 },
-  count2:       { src:'sounds/count-2.ogg',        volume:0.85 },
-  count3:       { src:'sounds/count-3.ogg',        volume:0.85 },
-  kickImpact:   { src:'sounds/kick-impact.mp3',    volume:0.8  },
-  whoosh:       { src:'sounds/whoosh.mp3',         volume:0.55 },
-  uiHit:        { src:'sounds/ui-hit.mp3',         volume:0.5  },
-  boom:         { src:'sounds/boom.mp3',           volume:0.55 },
-  heartbeat:    { src:'sounds/heartbeat.mp3',      volume:0.3  },
-  error:        { src:'sounds/error.mp3',          volume:0.6  },
-  victory:      { src:'sounds/victory.mp3',        volume:0.65 }
-};
-
 const AudioMgr = (() => {
-  let ctx = null, master = null;
-  const buffers = {};
-  const activeLoops = {};
-  let unlocked = false, loaded = false;
+  let ctx = null, master = null, duckG = null, busMus = null, busSfx = null, noiseBuf = null;
+  const buffers = {}, norm = {}, live = new Set(), loops = {};
+  let essentialDone = false;
+  const vol = { m:1, mu:1, sf:1 };
+  const TARGET_DB = -18;                       // المستوى المرجعي (RMS قصير المدى)
 
   function ensureCtx(){
-    if(!ctx){
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if(!AC) return null;
-      ctx = new AC();
-      master = ctx.createGain();
-      master.gain.value = 1;
-      master.connect(ctx.destination);
-    }
-    if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
+    if(ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    try{ ctx = new AC({ latencyHint:'interactive' }); }
+    catch(e){ try{ ctx = new AC(); }catch(e2){ ctx = null; return null; } }
+    master = ctx.createGain();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5; comp.attack.value = .004; comp.release.value = .2;
+    const lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = .001; lim.release.value = .06;
+    master.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
+    duckG = ctx.createGain(); duckG.connect(master);
+    busMus = ctx.createGain(); busMus.connect(duckG);
+    busSfx = ctx.createGain(); busSfx.connect(master);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    setVolumes(vol);
     return ctx;
   }
 
-  let loadingPromise = null;
-  async function preloadAll(){
-    if(loadingPromise) return loadingPromise;
-    const c = ensureCtx(); if(!c) return;
-    const entries = Object.entries(SOUND_FILES);
-    loadingPromise = Promise.all(entries.map(async ([name, cfg])=>{
-      try{
-        const res = await fetch(cfg.src);
-        const arr = await res.arrayBuffer();
-        buffers[name] = await c.decodeAudioData(arr);
-      }catch(e){ /* ملف مفقود بالاستضافة: يُتجاهل بصمت بدون كسر اللعبة */ }
-    })).then(()=>{ loaded = true; });
-    return loadingPromise;
+  function resume(){
+    if(ctx && ctx.state !== 'running' && ctx.state !== 'closed'){ try{ ctx.resume().catch(()=>{}); }catch(e){} }
   }
+  function suspend(){ if(ctx && ctx.state === 'running'){ try{ ctx.suspend().catch(()=>{}); }catch(e){} } }
 
+  let unlocked = false;
   function unlock(){
+    const c = ensureCtx(); if(!c) return;
+    resume();
     if(unlocked) return;
     unlocked = true;
-    ensureCtx();
-    if(!loaded) preloadAll();
+    try{                                           // فتح الصوت على iOS بنغمة صامتة داخل لمسة المستخدم
+      const b = c.createBuffer(1,1,22050), s = c.createBufferSource();
+      s.buffer = b; s.connect(c.destination); s.start(0);
+    }catch(e){}
   }
-  ['pointerdown','keydown','touchstart'].forEach(ev=>
-    window.addEventListener(ev, unlock, { once:true, passive:true })
-  );
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) resume(); });
 
-  function play(name, { rateJitter=0.04, gainMul=1, delay=0 } = {}){
-    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
-    if(!c || !buf || !cfg) return null;
-    const src = c.createBufferSource();
-    src.buffer = buf;
-    src.playbackRate.value = 1 + (Math.random()*2-1)*rateJitter;
-    const gain = c.createGain();
-    gain.gain.value = cfg.volume * gainMul;
-    src.connect(gain).connect(master);
-    src.start(c.currentTime + delay);
-    return src;
-  }
-
-  function playLoop(name, { fadeInDur=1.2, gainMul=1 } = {}){
-    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
-    if(!c || !buf || !cfg) return;
-    stopLoop(name, 0);
-    const src = c.createBufferSource();
-    src.buffer = buf; src.loop = true;
-    const gain = c.createGain();
-    const target = cfg.volume * gainMul;
-    gain.gain.setValueAtTime(0.0001, c.currentTime);
-    gain.gain.linearRampToValueAtTime(target, c.currentTime + fadeInDur);
-    src.connect(gain).connect(master);
-    src.start(0);
-    activeLoops[name] = { source:src, gain, target };
-  }
-
-  function stopLoop(name, fadeOutDur=0.8){
-    const l = activeLoops[name]; if(!l) return;
-    const c = ensureCtx();
-    if(c && fadeOutDur > 0){
-      l.gain.gain.cancelScheduledValues(c.currentTime);
-      l.gain.gain.setValueAtTime(l.gain.gain.value, c.currentTime);
-      l.gain.gain.linearRampToValueAtTime(0.0001, c.currentTime + fadeOutDur);
-      const src = l.source;
-      setTimeout(()=>{ try{ src.stop(); }catch(e){} }, fadeOutDur*1000 + 60);
-    } else {
-      try{ l.source.stop(); }catch(e){}
+  function setVolumes(v){
+    if(v){
+      if(typeof v.vm === 'number') vol.m = v.vm; if(typeof v.vmu === 'number') vol.mu = v.vmu; if(typeof v.vsf === 'number') vol.sf = v.vsf;
+      if(typeof v.m === 'number') vol.m = v.m; if(typeof v.mu === 'number') vol.mu = v.mu; if(typeof v.sf === 'number') vol.sf = v.sf;
     }
-    delete activeLoops[name];
+    if(!ctx) return;
+    const t = ctx.currentTime;
+    master.gain.setTargetAtTime(vol.m*vol.m, t, .03);    // منحنى تربيعي ليكون التحكم أنعم للأذن
+    busMus.gain.setTargetAtTime(vol.mu*vol.mu, t, .03);
+    busSfx.gain.setTargetAtTime(vol.sf*vol.sf, t, .03);
   }
 
-  function playClip(name, offset=0, duration=1.0, gainMul=1){
-    const c = ensureCtx(); const buf = buffers[name]; const cfg = SOUND_FILES[name];
-    if(!c || !buf || !cfg) return;
-    const src = c.createBufferSource();
-    src.buffer = buf;
-    const gain = c.createGain();
-    gain.gain.value = cfg.volume * gainMul;
-    src.connect(gain).connect(master);
-    src.start(c.currentTime, offset, duration);
+  /* ---- تحليل علو الملف: أعلى نافذة 0.4ث (أو الوسيط للملفات الطويلة) ---- */
+  function computeNorm(buf, cfg){
+    try{
+      const sr = buf.sampleRate, d = buf.getChannelData(0);
+      const off = cfg.off || 0;
+      const a = Math.max(0, Math.floor(off*sr));
+      const b = Math.min(d.length, a + Math.floor((cfg.dur || (buf.duration - off))*sr));
+      if(b - a < 64) return 1;
+      const win = Math.min(Math.floor(.4*sr), b - a), hop = Math.max(1, Math.floor(.1*sr));
+      const vals = []; let peak = 0;
+      for(let s=a; s+win<=b; s+=hop){
+        let sum = 0, n = 0;
+        for(let i=s;i<s+win;i+=2){ const v = d[i]; sum += v*v; n++; }
+        const ms = sum/n;
+        if(ms > 1e-6) vals.push(ms);                  // بوابة -60dB: تجاهل الصمت
+      }
+      for(let i=a;i<b;i+=4){ const v = Math.abs(d[i]); if(v > peak) peak = v; }
+      if(!vals.length) return 1;
+      vals.sort((x,y)=>x-y);
+      const secs = (b-a)/sr;
+      const ms = secs > 20 ? vals[vals.length>>1] : vals[vals.length-1];
+      const db = 10*Math.log10(ms);
+      let g = Math.pow(10, (TARGET_DB - db)/20);
+      g = Math.min(6, Math.max(.05, g));
+      if(peak*g > 2.2) g = 2.2/Math.max(peak, .001);
+      return g;
+    }catch(e){ return 1; }
   }
 
-  return { unlock, preloadAll, play, playLoop, stopLoop, playClip, get isLoaded(){return loaded;} };
+  function decode(arr){
+    return new Promise((res, rej)=>{
+      const p = ctx.decodeAudioData(arr, res, rej);
+      if(p && typeof p.catch === 'function') p.catch(rej);
+    });
+  }
+  async function loadOne(name){
+    const cfg = SOUND_FILES[name];
+    if(!cfg) return false;
+    if(buffers[name]) return true;
+    if(!ensureCtx()) return false;
+    try{
+      const r = await fetch(cfg.src);
+      if(!r.ok) throw new Error('http ' + r.status);
+      const buf = await decode(await r.arrayBuffer());
+      buffers[name] = buf; norm[name] = computeNorm(buf, cfg);
+      return true;
+    }catch(e){ return false; }
+  }
+  async function preloadEssential(onProgress){
+    if(!ensureCtx()){ if(onProgress) onProgress(1); essentialDone = true; return { missing:Object.keys(SOUND_FILES) }; }
+    const names = Object.keys(SOUND_FILES).filter(n=>!SOUND_FILES[n].lazy);
+    let done = 0; const missing = [];
+    await Promise.all(names.map(async n=>{
+      const ok = await loadOne(n);
+      if(!ok) missing.push(n);
+      done++; if(onProgress) onProgress(done/names.length);
+    }));
+    essentialDone = true;
+    return { missing };
+  }
+  function loadLazy(name){ return loadOne(name); }
+
+  /* ---- تشغيل مقطع ---- */
+  function play(name, o){
+    o = o || {};
+    const c = ctx, buf = buffers[name], cfg = SOUND_FILES[name];
+    if(!c || !buf || !cfg || c.state === 'closed') return null;
+    const max = cfg.max || 4; let n = 0, oldest = null;
+    live.forEach(h=>{ if(h.name === name){ n++; if(!oldest) oldest = h; } });
+    if(n >= max && oldest) oldest.stop(.05);
+
+    const rate = 1 + (Math.random()*2-1)*(o.jitter != null ? o.jitter : (cfg.jitter != null ? cfg.jitter : .03));
+    const off = o.off != null ? o.off : (cfg.off || 0);
+    const avail = buf.duration - off;
+    const dur = Math.min(o.dur != null ? o.dur : (cfg.dur || avail), avail);
+    if(dur <= .01) return null;
+    const lvl = (norm[name] || 1) * cfg.mix * (o.gain != null ? o.gain : 1);
+    const fade = Math.min(o.fade != null ? o.fade : (cfg.fade != null ? cfg.fade : .04), dur*.8);
+    const fi = o.fadeIn != null ? o.fadeIn : .004;
+    const t0 = c.currentTime + (o.delay || 0);
+    const wall = dur/rate;
+
+    const src = c.createBufferSource(), g = c.createGain();
+    src.buffer = buf; src.playbackRate.value = rate;
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.linearRampToValueAtTime(lvl, t0 + fi);
+    g.gain.setValueAtTime(lvl, Math.max(t0 + fi + .001, t0 + wall - fade));
+    g.gain.linearRampToValueAtTime(.0001, t0 + wall);
+    src.connect(g); g.connect(cfg.bus === 'mus' ? busMus : busSfx);
+
+    const h = { name, group:o.group || '', src, g,
+      stop(f){
+        f = f == null ? .1 : f;
+        try{
+          const t = c.currentTime;
+          g.gain.cancelScheduledValues(t);
+          g.gain.setValueAtTime(Math.max(g.gain.value, .0001), t);
+          g.gain.linearRampToValueAtTime(.0001, t + f);
+          src.stop(t + f + .03);
+        }catch(e){}
+        live.delete(h);
+      } };
+    src.onended = ()=>{ live.delete(h); try{ src.disconnect(); g.disconnect(); }catch(e){} };
+    live.add(h);
+    try{ src.start(t0, off, dur); }catch(e){ live.delete(h); return null; }
+    return h;
+  }
+  function stopGroup(group, f){ live.forEach(h=>{ if(h.group === group) h.stop(f); }); }
+
+  function playLoop(name, o){
+    o = o || {};
+    const c = ctx, buf = buffers[name], cfg = SOUND_FILES[name];
+    if(!c || !buf || !cfg) return null;
+    stopLoop(name, 0);
+    const src = c.createBufferSource(), g = c.createGain();
+    src.buffer = buf; src.loop = true;
+    if(cfg.loop){ src.loopStart = cfg.loop[0]; src.loopEnd = Math.min(cfg.loop[1], buf.duration); }
+    const target = (norm[name] || 1) * cfg.mix * (o.gain != null ? o.gain : 1);
+    const fi = o.fadeIn != null ? o.fadeIn : 1;
+    g.gain.setValueAtTime(.0001, c.currentTime);
+    g.gain.linearRampToValueAtTime(target, c.currentTime + fi);
+    src.connect(g); g.connect(cfg.bus === 'mus' ? busMus : busSfx);
+    try{ src.start(0, o.off || 0); }catch(e){ return null; }
+    loops[name] = { src, g };
+    return loops[name];
+  }
+  function stopLoop(name, f){
+    const l = loops[name]; if(!l) return;
+    delete loops[name];
+    try{
+      if(f > 0 && ctx){
+        const t = ctx.currentTime;
+        l.g.gain.cancelScheduledValues(t);
+        l.g.gain.setValueAtTime(Math.max(l.g.gain.value, .0001), t);
+        l.g.gain.linearRampToValueAtTime(.0001, t + f);
+        l.src.stop(t + f + .05);
+      } else l.src.stop();
+    }catch(e){}
+  }
+  function hasLoop(name){ return !!loops[name]; }
+
+  /* ---- خفض الموسيقى مؤقتًا تحت الضربات القوية ---- */
+  function duck(depth, hold, rel){
+    if(!ctx || !duckG) return;
+    const t = ctx.currentTime, p = duckG.gain;
+    p.cancelScheduledValues(t);
+    p.setValueAtTime(Math.max(p.value, .0001), t);
+    p.linearRampToValueAtTime(depth, t + .02);
+    p.setValueAtTime(depth, t + .02 + hold);
+    p.linearRampToValueAtTime(1, t + .02 + hold + rel);
+  }
+
+  /* ---- أصوات مولَّدة (لا تحتاج ملفات) ---- */
+  function tone(type, f0, f1, dur, vol0, lp, when){
+    const c = ctx; if(!c) return;
+    const t = c.currentTime + (when || 0);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if(f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol0, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    let nd = o;
+    if(lp){ const q = c.createBiquadFilter(); q.type = 'lowpass'; q.frequency.value = lp; o.connect(q); nd = q; }
+    nd.connect(g); g.connect(busSfx); o.start(t); o.stop(t + dur + .03);
+  }
+  function hiss(dur, vol0, f0, f1, type, when){
+    const c = ctx; if(!c || !noiseBuf) return;
+    const t = c.currentTime + (when || 0);
+    const s = c.createBufferSource(), g = c.createGain(), q = c.createBiquadFilter();
+    s.buffer = noiseBuf; q.type = type || 'lowpass';
+    q.frequency.setValueAtTime(f0, t); q.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(vol0, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(q); q.connect(g); g.connect(busSfx); s.start(t); s.stop(t + dur + .03);
+  }
+  function synth(kind, a){
+    if(!ctx || ctx.state !== 'running') return;
+    try{
+      switch(kind){
+        case 'tick':  { const f = 620 + Math.min(a|0, 14)*42; tone('sine', f, f*1.02, .05, .05); tone('triangle', f*2, f*2, .03, .016); break; }
+        case 'wrong': tone('square', 170, 85, .16, .055, 900); break;
+        case 'lock':  tone('triangle', 880, 880, .07, .06); tone('triangle', 1320, 1320, .09, .06, 0, .07); break;
+        case 'hit':   hiss(.5, .12, 2400, 120); tone('sine', 95, 38, .45, .14); break;          // خسارة روح
+        case 'click': tone('sine', 520, 380, .06, .05); break;
+        case 'down':  tone('sawtooth', 330, 50, 1.1, .12, 900); hiss(1, .14, 2000, 80); break;  // نهاية اللعبة
+      }
+    }catch(e){}
+  }
+
+  return { unlock, resume, suspend, ensureCtx, setVolumes, preloadEssential, loadLazy, play, stopGroup,
+           playLoop, stopLoop, hasLoop, duck, synth,
+           has(n){ return !!buffers[n]; }, get norm(){ return norm; }, get ready(){ return essentialDone; } };
 })();
 
 /* =========================================================
    عناصر DOM
 ========================================================= */
-const stage = document.getElementById('stage');
-const world = document.getElementById('world');
-const bgCanvas = document.getElementById('bgCanvas');
+const stage = $('stage');
+const world = $('world');
+const bgCanvas = $('bgCanvas');
 const bctx = bgCanvas.getContext('2d');
-const fxCanvas = document.getElementById('fxCanvas');
+const fxCanvas = $('fxCanvas');
 const fctx = fxCanvas.getContext('2d');
-const scoreEl = document.getElementById('score');
-const levelEl = document.getElementById('level');
-const livesEl = document.getElementById('lives');
-const accuracyEl = document.getElementById('accuracyStat');
-const timeEl = document.getElementById('timeStat');
-const hud = document.getElementById('hud');
-const overlay = document.getElementById('overlay');
-const startBtn = document.getElementById('startBtn');
-const startPanel = document.getElementById('startPanel');
-const settingsPanel = document.getElementById('settingsPanel');
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsBackBtn = document.getElementById('settingsBackBtn');
-const langArBtn = document.getElementById('langArBtn');
-const langEnBtn = document.getElementById('langEnBtn');
-const bestScoreLabel = document.getElementById('bestScoreLabel');
-const bestLevelLabel = document.getElementById('bestLevelLabel');
-const coreEl = document.getElementById('core');
-const awakenScene = document.getElementById('awakenScene');
-const awakenLabel = document.getElementById('awakenLabel');
+const scoreEl = $('score');
+const levelEl = $('level');
+const livesEl = $('lives');
+const accuracyEl = $('accuracyStat');
+const timeEl = $('timeStat');
+const hud = $('hud');
+const overlay = $('overlay');
+const startBtn = $('startBtn');
+const startPanel = $('startPanel');
+const settingsPanel = $('settingsPanel');
+const endPanel = $('endPanel');
+const settingsBtn = $('settingsBtn');
+const settingsBackBtn = $('settingsBackBtn');
+const langArBtn = $('langArBtn');
+const langEnBtn = $('langEnBtn');
+const bestScoreLabel = $('bestScoreLabel');
+const bestLevelLabel = $('bestLevelLabel');
+const coreEl = $('core');
+const awakenScene = $('awakenScene');
+const awakenLabel = $('awakenLabel');
 const awakenCenterMark = document.querySelector('#awakenCenterMark svg');
 const awakenNodes = document.querySelectorAll('.awakenNode');
 const awakenBeams = document.querySelectorAll('.awakenBeam');
-const irisWipe = document.getElementById('irisWipe');
-function wait(ms){ return new Promise(r=> setTimeout(r, ms)); }
+const irisWipe = $('irisWipe');
+const breachOverlay = $('breachOverlay');
+const breachTitle = $('breachTitle');
+const breachSub = $('breachSub');
+const breachStatus = $('breachStatus');
+const emberField = $('emberField');
+const defenseOverlay = $('defenseOverlay');
+const countdownNum = $('countdownNum');
+const levelUpOverlay = $('levelUpOverlay');
+const mobileInput = $('mobileInput');
+const flashLayer = $('flashLayer');
+const vignette = $('vignette');
+const comboWrap = $('comboWrap');
+const comboNum = $('comboNum');
+const comboBarFill = $('comboBarFill');
+const bootEl = $('boot'), bootFill = $('bootFill'), bootPct = $('bootPct'), bootMsg = $('bootMsg'), bootEnter = $('bootEnter');
+const pauseBtn = $('pauseBtn'), pauseOverlay = $('pauseOverlay'), resumeBtn = $('resumeBtn'), quitBtn = $('quitBtn');
+const skipBtn = $('skipBtn'), crtLayer = $('crtLayer'), toastEl = $('toast');
+const BREACH_TITLE_TEXT = breachTitle.textContent;
+
 function irisSet(closed, fast){
   irisWipe.classList.add('animate');
   irisWipe.classList.toggle('fastBlink', !!fast);
   irisWipe.classList.toggle('closed', !!closed);
 }
-const breachOverlay = document.getElementById('breachOverlay');
-const breachTitle = document.getElementById('breachTitle');
-const breachSub = document.getElementById('breachSub');
-const breachStatus = document.getElementById('breachStatus');
-const emberField = document.getElementById('emberField');
-const defenseOverlay = document.getElementById('defenseOverlay');
-const countdownNum = document.getElementById('countdownNum');
-const levelUpOverlay = document.getElementById('levelUpOverlay');
-const mobileInput = document.getElementById('mobileInput');
-const flashLayer = document.getElementById('flashLayer');
-const vignette = document.getElementById('vignette');
-const comboWrap = document.getElementById('comboWrap');
-const comboNum = document.getElementById('comboNum');
-const comboBarFill = document.getElementById('comboBarFill');
+function flash(color, alpha, dur){
+  if(REDUCE_MOTION) alpha *= .35;
+  flashLayer.style.transition = 'none';
+  flashLayer.style.background = color;
+  flashLayer.style.opacity = String(alpha);
+  requestAnimationFrame(()=>{
+    flashLayer.style.transition = 'opacity ' + (dur || .3) + 's ease';
+    flashLayer.style.opacity = '0';
+  });
+}
+function buzz(p){ try{ if(navigator.vibrate && SETTINGS.haptics !== false) navigator.vibrate(p); }catch(e){} }
+let toastTimer = 0;
+function showToast(msg){
+  toastEl.textContent = msg; toastEl.style.display = 'block';
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>{ toastEl.style.display = 'none'; }, 6000);
+}
 
 /* =========================================================
-   الإعدادات (اللغة) + أفضل نتيجة/مستوى — محفوظة بالمتصفح
+   الإعدادات (اللغة + الصوت) + أفضل نتيجة/مستوى — محفوظة بالمتصفح
 ========================================================= */
 function loadSettings(){
+  const s = { lang:'ar', vm:1, vmu:1, vsf:1, haptics:true };
   try{
-    const raw = localStorage.getItem(SETTINGS_KEY);
+    const raw = Store.get(SETTINGS_KEY, null);
     if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed && (parsed.lang === 'ar' || parsed.lang === 'en')) return parsed;
+      const p = JSON.parse(raw);
+      if(p && typeof p === 'object'){
+        if(p.lang === 'ar' || p.lang === 'en') s.lang = p.lang;
+        ['vm','vmu','vsf'].forEach(k=>{ if(typeof p[k] === 'number' && p[k] >= 0 && p[k] <= 1) s[k] = p[k]; });
+        if(p.haptics === false) s.haptics = false;
+      }
     }
   }catch(e){}
-  return { lang:'ar' };
+  return s;
 }
 const SETTINGS = loadSettings();
+function saveSettings(){ Store.set(SETTINGS_KEY, JSON.stringify(SETTINGS)); }
+AudioMgr.setVolumes(SETTINGS);
 
-function saveSettings(){
-  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }catch(e){}
-}
-
-function getBestScore(){ return parseInt(localStorage.getItem(BEST_KEY) || '0', 10); }
-function getBestLevel(){ return parseInt(localStorage.getItem(BEST_LEVEL_KEY) || '1', 10); }
-
+function getBestScore(){ return parseInt(Store.get(BEST_KEY, '0'), 10) || 0; }
+function getBestLevel(){ return parseInt(Store.get(BEST_LEVEL_KEY, '1'), 10) || 1; }
 function refreshBestLabels(){
   bestScoreLabel.textContent = getBestScore();
   bestLevelLabel.textContent = getBestLevel();
@@ -720,20 +1021,28 @@ function refreshLangButtons(){
 }
 refreshLangButtons();
 
-settingsBtn.addEventListener('click', ()=>{
-  startPanel.style.display = 'none';
-  settingsPanel.style.display = 'block';
+function showPanel(id){
+  [startPanel, settingsPanel, endPanel].forEach(p=>{ p.style.display = (p.id === id) ? 'block' : 'none'; });
+}
+
+const volInputs = [ ['volM','vm'], ['volMu','vmu'], ['volSf','vsf'] ];
+volInputs.forEach(([id, key])=>{
+  const el = $(id);
+  el.value = Math.round(SETTINGS[key]*100);
+  el.addEventListener('input', ()=>{ SETTINGS[key] = Math.max(0, Math.min(1, (+el.value || 0)/100)); AudioMgr.setVolumes(SETTINGS); });
+  el.addEventListener('change', ()=>{ saveSettings(); if(key !== 'vmu') AudioMgr.play('uiHit'); });
 });
-settingsBackBtn.addEventListener('click', ()=>{
-  settingsPanel.style.display = 'none';
-  startPanel.style.display = 'block';
-});
-langArBtn.addEventListener('click', ()=>{ SETTINGS.lang='ar'; saveSettings(); refreshLangButtons(); });
-langEnBtn.addEventListener('click', ()=>{ SETTINGS.lang='en'; saveSettings(); refreshLangButtons(); });
+
+settingsBtn.addEventListener('click', ()=> showPanel('settingsPanel'));
+settingsBackBtn.addEventListener('click', ()=> showPanel('startPanel'));
+langArBtn.addEventListener('click', ()=>{ SETTINGS.lang = 'ar'; saveSettings(); refreshLangButtons(); });
+langEnBtn.addEventListener('click', ()=>{ SETTINGS.lang = 'en'; saveSettings(); refreshLangButtons(); });
+
+/* صوت نقر خفيف لكل أزرار القوائم */
+overlay.addEventListener('click', (e)=>{ if(e.target.closest && e.target.closest('button')) AudioMgr.synth('click'); });
 
 /* =========================================================
    بنوك الكلمات — عربي / إنكليزي، ومقسّمة حسب الصعوبة
-   (يمكن دمج كلمتين أو ثلاث حسب المستوى لبناء "عبارة")
 ========================================================= */
 const WORD_BANK = {
   ar: {
@@ -774,25 +1083,19 @@ const WORD_BANK = {
     ]
   }
 };
-
 function pickFrom(pool){ return pool[(Math.random()*pool.length)|0]; }
 
-/* تحديد عدد الكلمات المطلوبة حسب المستوى: 
-   1-3 سهل (كلمة واحدة قصيرة) — 4-7 متوسط (احتمال كلمتين يزيد مع المستوى)
-   8+ صعب (كلمتان الى ثلاث، احتمال الثلاث يزيد مع المستوى) */
+/* 1-3 سهل (كلمة) — 4-7 متوسط (احتمال كلمتين يزيد) — 8+ صعب (كلمتان الى ثلاث) */
 function buildPhrase(level){
   const dict = WORD_BANK[SETTINGS.lang] || WORD_BANK.ar;
   let pool, count;
-  if(level <= 3){
-    pool = dict.easy; count = 1;
-  } else if(level <= 7){
+  if(level <= 3){ pool = dict.easy; count = 1; }
+  else if(level <= 7){
     pool = dict.medium;
-    const chance2 = Math.min(0.75, (level-3)/5);
-    count = Math.random() < chance2 ? 2 : 1;
+    count = Math.random() < Math.min(0.75, (level-3)/5) ? 2 : 1;
   } else {
     pool = dict.hard;
-    const chance3 = Math.min(0.7, (level-7)/9);
-    count = Math.random() < chance3 ? 3 : 2;
+    count = Math.random() < Math.min(0.7, (level-7)/9) ? 3 : 2;
   }
   const parts = [];
   for(let i=0;i<count;i++) parts.push(pickFrom(pool));
@@ -800,10 +1103,22 @@ function buildPhrase(level){
 }
 
 /* =========================================================
-   خلفية المصفوفة المتحركة (Canvas خفيف الأداء، DPR مضبوط)
+   توحيد الألف: أ إ آ ٱ  →  ا   (للمفتاح المكتوب ولنص الكلمة معًا)
+   ملاحظة: لا نوحّد ى/ي ولا ة/ه — فقط الألف كما طلبت.
+========================================================= */
+const ALEF_RE = /[آأإٱ]/g;
+function normStr(s){ return SETTINGS.lang === 'ar' ? s.replace(ALEF_RE, 'ا') : s.toLowerCase(); }
+function isLetterKey(k){
+  if(typeof k !== 'string' || k.length !== 1) return false;
+  return SETTINGS.lang === 'ar' ? /[ء-يٱ]/.test(k) : /[a-zA-Z]/.test(k);
+}
+
+/* =========================================================
+   خلفية المصفوفة المتحركة + ضبط الأبعاد (يتبع الـ visualViewport لتفادي لوحة المفاتيح)
 ========================================================= */
 const matrixChars = '01アイウエオカキクケコ01ABCDEF#$%&{}[]<>/\\'.split('');
 let mCols = [], stageW = 0, stageH = 0;
+let words = [];
 
 function resizeCanvases(){
   stageW = stage.clientWidth; stageH = stage.clientHeight;
@@ -819,7 +1134,23 @@ function resizeCanvases(){
   const cols = Math.ceil((stageW / fontSize) * Quality.cfg.matrixDensity);
   mCols = new Array(cols).fill(0).map(()=> ({ x: Math.random()*stageW, y: Math.random()*-stageH }));
 }
-window.addEventListener('resize', resizeCanvases);
+function fitViewport(){
+  const vv = window.visualViewport;
+  const h = Math.round(vv ? vv.height : window.innerHeight);
+  if(h > 80) stage.style.height = h + 'px';
+  stage.style.transform = (vv && vv.offsetTop) ? 'translateY(' + vv.offsetTop + 'px)' : '';
+  resizeCanvases();
+  words.forEach(w=>{                               // لا نترك كلمة تحت الحافة بعد ظهور/اختفاء لوحة المفاتيح
+    w.x = Math.max(0, Math.min(w.x, stageW - w.w - 8));
+    w.y = Math.min(w.y, stageH - 140);
+  });
+}
+window.addEventListener('resize', fitViewport);
+window.addEventListener('orientationchange', ()=> setTimeout(fitViewport, 250));
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', fitViewport);
+  window.visualViewport.addEventListener('scroll', ()=>{ window.scrollTo(0,0); });
+}
 
 function drawBg(){
   const fontSize = 15;
@@ -866,6 +1197,7 @@ const Particles = (() => {
     for(let i=0;i<count;i++){
       if(active.length >= max) break;
       const p = pool.pop() || {};
+      p.ring = false;
       const angle = Math.random()*Math.PI*2;
       const dist = (power*0.5 + Math.random()*power);
       p.x = cx; p.y = cy;
@@ -878,13 +1210,11 @@ const Particles = (() => {
       active.push(p);
     }
   }
-
   function spawnRing(cx, cy, color){
     const r = pool.pop() || {};
     r.ring = true; r.x = cx; r.y = cy; r.life = 0; r.maxLife = 420; r.color = color;
     active.push(r);
   }
-
   function update(dt){
     for(let i=active.length-1;i>=0;i--){
       const p = active[i];
@@ -897,7 +1227,6 @@ const Particles = (() => {
       }
     }
   }
-
   function render(ctx){
     for(let i=0;i<active.length;i++){
       const p = active[i];
@@ -926,24 +1255,22 @@ const Particles = (() => {
     }
     ctx.globalAlpha = 1;
   }
-
-  return { spawnBurst, spawnRing, update, render, get count(){return active.length;} };
+  function clear(){ while(active.length) pool.push(active.pop()); }
+  return { spawnBurst, spawnRing, update, render, clear };
 })();
 
 /* =========================================================
-   اهتزاز الشاشة بمنحنى تخميد
+   اهتزاز الشاشة بمنحنى تخميد (يخفّ مع "تقليل الحركة")
 ========================================================= */
 const Shake = (() => {
-  let intensity = 0, t = 0;
-  function trigger(power){ intensity = Math.max(intensity, power); t = 0; }
+  let intensity = 0;
+  function trigger(power){ intensity = Math.max(intensity, power * (REDUCE_MOTION ? .25 : 1)); }
   function update(dt){
-    if(intensity <= 0.01){ intensity = 0; world.style.transform = ''; return; }
-    t += dt;
+    if(intensity <= 0.01){ if(intensity !== 0){ intensity = 0; world.style.transform = ''; } return; }
     intensity *= Math.pow(0.90, dt/16.67);
-    const decay = intensity;
-    const ox = (Math.random()*2-1)*decay;
-    const oy = (Math.random()*2-1)*decay*0.6;
-    const rot = (Math.random()*2-1)*decay*0.12;
+    const ox = (Math.random()*2-1)*intensity;
+    const oy = (Math.random()*2-1)*intensity*0.6;
+    const rot = (Math.random()*2-1)*intensity*0.12;
     world.style.transform = `translate(${ox}px,${oy}px) rotate(${rot}deg)`;
   }
   return { trigger, update };
@@ -951,119 +1278,91 @@ const Shake = (() => {
 
 /* =========================================================
    حالة اللعبة
+   S.state: boot → menu → intro → play ⇄ paused / levelup → over → (menu | intro)
 ========================================================= */
+const S = { token:0, state:'boot', introSeen:false };
 let score=0, lives=3, level=1, wordsDestroyed=0, keysCorrect=0, keysTotal=0;
-let words=[], activeWord=null, running=false, spawnTimer=null;
-let startTime=0, timeTimer=null;
+let activeWord=null, gameMs=0, spawnAcc=0, slowT=0, timeScale=1, laserAt=0, lastSec=-1, livesShown=-1;
 let combo=0, comboTimer=0, comboMax=0;
+const SLOW_MS = 650;
+const spawnInterval = () => Math.max(1600 - level*80, 700);
 
 function fmtTime(sec){
   const m = String(Math.floor(sec/60)).padStart(2,'0');
   const s = String(sec%60).padStart(2,'0');
   return `${m}:${s}`;
 }
-
-function popValue(el){
-  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-}
+function popValue(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+function accuracy(){ return keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100); }
 
 function updateHud(){
   scoreEl.textContent = score;
   levelEl.textContent = level;
-  livesEl.innerHTML = "";
-  for(let i=0;i<3;i++){
-    const d = document.createElement('span');
-    d.className = 'life-dot' + (i < lives ? '' : ' lost');
-    livesEl.appendChild(d);
+  if(livesShown !== lives){
+    livesShown = lives;
+    livesEl.textContent = '';
+    for(let i=0;i<3;i++){
+      const d = document.createElement('span');
+      d.className = 'life-dot' + (i < lives ? '' : ' lost');
+      livesEl.appendChild(d);
+    }
   }
-  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
-  accuracyEl.textContent = acc + '%';
+  accuracyEl.textContent = accuracy() + '%';
 }
 
-function tickTime(){
-  if(!running) return;
-  const elapsed = Math.floor((Date.now()-startTime)/1000);
-  timeEl.textContent = fmtTime(elapsed);
-}
-
-function multiplierFor(c){
-  if(c >= 15) return 4;
-  if(c >= 8) return 3;
-  if(c >= 3) return 2;
-  return 1;
-}
-
+function multiplierFor(c){ return c >= 15 ? 4 : c >= 8 ? 3 : c >= 3 ? 2 : 1; }
 function registerHit(){
   combo++; comboTimer = 2600; comboMax = Math.max(comboMax, combo);
   const mult = multiplierFor(combo);
-  if(mult > 1){
-    comboWrap.classList.add('show');
-    comboNum.textContent = '×'+mult;
-  } else {
-    comboWrap.classList.remove('show');
-  }
+  if(mult > 1){ comboWrap.classList.add('show'); comboNum.textContent = '×'+mult; }
+  else comboWrap.classList.remove('show');
 }
-function resetCombo(){
-  combo = 0; comboTimer = 0;
-  comboWrap.classList.remove('show');
+function resetCombo(){ combo = 0; comboTimer = 0; comboWrap.classList.remove('show'); }
+
+function clearWords(){
+  words.forEach(w=> w.el.remove()); words = []; activeWord = null;
+  Particles.clear();
 }
 
 /* =========================================================
-   تشغيل الكلمات
+   الكلمات
 ========================================================= */
 function spawnWord(){
-  if(!running) return;
   const parts = buildPhrase(level);
-  const fullText = parts.join(''); // بدون مسافات لغرض المطابقة أثناء الكتابة
-  const displayText = parts.join(' ');
+  const fullText = parts.join('');                 // بدون مسافات لغرض المطابقة أثناء الكتابة
   const el = document.createElement('div');
-  el.className = 'word';
-  el.innerHTML = `<span class="typed"></span><span class="rest">${displayText}</span>`;
+  el.className = 'word live';
+  const typedEl = document.createElement('span'); typedEl.className = 'typed';
+  const restEl = document.createElement('span'); restEl.className = 'rest'; restEl.textContent = parts.join(' ');
+  el.appendChild(typedEl); el.appendChild(restEl);
   world.appendChild(el);
-  const x = Math.random() * (stageW - Math.max(150, displayText.length*11)) + 20;
-  el.style.transform = `translate3d(${x}px,-74px,0) scale(0.9)`;
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      el.classList.add('in');
-      el.style.transform = `translate3d(${x}px,-46px,0) scale(1)`;
-    });
-  });
-  const speed = (0.42 + level*0.12 + Math.random()*0.18) * 0.06; // px/ms
-  words.push({el, words:parts, text: fullText, x, typedCount:0, y:-46, speed, danger:false, hitUntil:0});
+  const ww = el.offsetWidth, hh = el.offsetHeight;
+  const x = 12 + Math.random() * Math.max(0, stageW - ww - 24);
+  el.style.transform = `translate3d(${x}px,-46px,0)`;
+  requestAnimationFrame(()=> el.classList.add('in'));
+  const speed = (0.42 + level*0.12 + Math.random()*0.18) * 0.06;   // px/ms
+  words.push({ el, typedEl, restEl, words:parts, text:fullText, norm:normStr(fullText),
+               x, w:ww, h:hh, typedCount:0, y:-46, speed, danger:false, hitUntil:0 });
 }
 
 function renderWordProgress(w){
-  let count = w.typedCount;
-  let displayTyped = '';
-  let displayRest = '';
+  let count = w.typedCount, typed = '', rest = '';
   for(let i=0;i<w.words.length;i++){
     const word = w.words[i];
     const sep = i < w.words.length-1 ? ' ' : '';
-    if(count >= word.length){
-      displayTyped += word + sep;
-      count -= word.length;
-    } else if(count > 0){
-      displayTyped += word.slice(0,count);
-      displayRest += word.slice(count) + sep;
-      count = 0;
-    } else {
-      displayRest += word + sep;
-    }
+    if(count >= word.length){ typed += word + sep; count -= word.length; }
+    else if(count > 0){ typed += word.slice(0,count); rest += word.slice(count) + sep; count = 0; }
+    else rest += word + sep;
   }
-  w.el.querySelector('.typed').textContent = displayTyped;
-  w.el.querySelector('.rest').textContent = displayRest;
+  w.typedEl.textContent = typed;
+  w.restEl.textContent = rest;
 }
 
 function explode(w){
-  const rect = w.el.getBoundingClientRect();
-  const stageRect = stage.getBoundingClientRect();
-  const cx = rect.left - stageRect.left + rect.width/2;
-  const cy = rect.top - stageRect.top + rect.height/2;
-  const colors = ['#ffb454','#7cf9e0','#3fe8c9'];
-
+  const cx = w.x + w.w/2, cy = w.y + w.h/2;
   const mult = multiplierFor(combo+1);
   const power = 3.2 + Math.min(mult,4)*0.9;
-  Particles.spawnBurst(cx, cy, colors, 16 + mult*4, power);
+  Particles.spawnBurst(cx, cy, ['#ffb454','#7cf9e0','#3fe8c9'], 16 + mult*4, power);
   Particles.spawnRing(cx, cy, '#ffb454');
   if(mult >= 3) Particles.spawnRing(cx, cy, '#3fe8c9');
 
@@ -1073,17 +1372,12 @@ function explode(w){
   w.el.style.filter = 'brightness(2) drop-shadow(0 0 20px rgba(255,180,84,.45))';
   setTimeout(()=> w.el.remove(), 240);
 
-  flashLayer.style.background = '#fff';
-  flashLayer.style.transition = 'none';
-  flashLayer.style.opacity = mult >= 3 ? '0.18' : '0.1';
-  requestAnimationFrame(()=>{
-    flashLayer.style.transition = 'opacity .24s ease';
-    flashLayer.style.opacity = '0';
-  });
-
+  flash('#ffffff', mult >= 3 ? 0.18 : 0.1, .24);
   Shake.trigger(2.5 + mult*1.4);
-  AudioMgr.play('boom', { gainMul: 0.7 + mult*0.08 });
-  AudioMgr.play('uiHit', { gainMul:0.5, rateJitter:0.1 });
+  AudioMgr.play('boom', { gain: .75 + mult*.08 });
+  AudioMgr.play('uiHit', { gain:.45, jitter:.1 });
+  AudioMgr.duck(.6, .08, .5);
+  buzz(14);
 
   registerHit();
   const mNow = multiplierFor(combo);
@@ -1091,9 +1385,8 @@ function explode(w){
   wordsDestroyed++;
   popValue(scoreEl);
   updateHud();
-  if(score > level*300){
-    levelUp();
-  }
+  if(combo === 15 || (combo > 15 && combo % 10 === 0)) slowT = SLOW_MS;   // لحظة بطيئة عند سلاسل كبيرة
+  if(score > level*300) levelUp();
 }
 
 function loseLife(w){
@@ -1103,182 +1396,234 @@ function loseLife(w){
   w.el.style.opacity = '0';
   w.el.style.filter = 'blur(3px)';
   setTimeout(()=> w.el.remove(), 380);
+  Particles.spawnBurst(w.x + w.w/2, w.y + w.h/2, ['#ff3b4e','#ff8291'], 12, 2.2);
 
-  const rect = w.el.getBoundingClientRect();
-  const stageRect = stage.getBoundingClientRect();
-  Particles.spawnBurst(rect.left-stageRect.left + rect.width/2, rect.top-stageRect.top + rect.height/2, ['#ff3b4e','#ff8291'], 12, 2.2);
-
+  if(activeWord === w) activeWord = null;
   lives--;
   resetCombo();
   Shake.trigger(7.5);
   redFlashBrief();
-  AudioMgr.play('error');
-  if(lives === 1) AudioMgr.playLoop('heartbeat', { fadeInDur:0.6 });
-  else AudioMgr.stopLoop('heartbeat', 0.5);
+  AudioMgr.synth('hit');                                   // error.mp3 صامت تقريبًا → صوت مولَّد
+  AudioMgr.play('glitchEffect', { dur:.7, fade:.3, gain:.6 });
+  buzz([40, 30, 60]);
+  if(lives === 1){ AudioMgr.playLoop('heartbeat', { fadeIn:.6 }); slowT = 500; }
+  else AudioMgr.stopLoop('heartbeat', .5);
   updateHud();
-  if(lives <= 0){
-    AudioMgr.stopLoop('heartbeat', 0.4);
-    endGame(false);
-  }
+  if(lives <= 0){ AudioMgr.stopLoop('heartbeat', .4); endGame(); }
 }
 
-function screenShakeCoreHit(){
+function redFlashBrief(){
   coreEl.classList.add('hit');
   setTimeout(()=> coreEl.classList.remove('hit'), 260);
-}
-function redFlashBrief(){
-  screenShakeCoreHit();
-  flashLayer.style.transition = 'none';
-  flashLayer.style.background = 'var(--danger)';
-  flashLayer.style.opacity = '0.28';
-  requestAnimationFrame(()=>{
-    flashLayer.style.transition = 'opacity .3s ease';
-    flashLayer.style.opacity = '0';
-  });
-  setTimeout(()=>{ flashLayer.style.background = '#fff'; }, 320);
+  flash('#ff3b4e', .28, .3);
   vignette.style.boxShadow = 'inset 0 0 220px 60px rgba(255,59,78,0.35)';
   setTimeout(()=>{ vignette.style.boxShadow = 'inset 0 0 160px 40px rgba(0,0,0,0.75)'; }, 260);
 }
 
 /* =========================================================
-   حلقة اللعبة الموحّدة (Delta Time)
+   ليزر القنص: خط من النواة إلى الكلمة المقفولة
 ========================================================= */
-let lastFrame = 0, fpsAccum = 0, fpsFrames = 0, fpsClock = 0;
+function drawLaser(now){
+  const w = activeWord;
+  if(!w || !words.includes(w)) return;
+  const x1 = stageW/2, y1 = stageH - 76, x2 = w.x + w.w/2, y2 = w.y + w.h/2;
+  const pulse = Math.max(0, 1 - (now - laserAt)/140);
+  fctx.save();
+  fctx.lineCap = 'round';
+  fctx.beginPath(); fctx.moveTo(x1, y1); fctx.lineTo(x2, y2);
+  fctx.strokeStyle = 'rgba(255,180,84,' + (0.14 + 0.36*pulse).toFixed(3) + ')';
+  fctx.lineWidth = 5 + 7*pulse;
+  fctx.stroke();
+  fctx.setLineDash([7, 9]); fctx.lineDashOffset = -now/18;
+  fctx.strokeStyle = 'rgba(255,230,170,' + (0.35 + 0.6*pulse).toFixed(3) + ')';
+  fctx.lineWidth = 1.2 + 1.6*pulse;
+  fctx.stroke();
+  fctx.setLineDash([]);
+  fctx.beginPath(); fctx.arc(x2, y2, Math.max(w.w, w.h)*0.5 + 8 + 4*pulse, 0, Math.PI*2);
+  fctx.strokeStyle = 'rgba(255,180,84,' + (0.25 + 0.4*pulse).toFixed(3) + ')';
+  fctx.lineWidth = 1.2;
+  fctx.stroke();
+  fctx.restore();
+}
+
+/* =========================================================
+   حلقة اللعبة الموحّدة (Delta Time) — التوليد والساعة بزمن اللعبة لا بالمؤقتات
+========================================================= */
+let lastFrame = 0, fpsAccum = 0, fpsFrames = 0;
 
 function mainLoop(now){
   if(!lastFrame) lastFrame = now;
-  let dt = now - lastFrame;
+  const dt = Math.min(now - lastFrame, 48);
   lastFrame = now;
-  dt = Math.min(dt, 48);
 
   fpsAccum += dt; fpsFrames++;
-  if(fpsAccum >= 500){
-    Quality.sampleFps(1000/(fpsAccum/fpsFrames));
-    fpsAccum = 0; fpsFrames = 0;
-  }
+  if(fpsAccum >= 500){ Quality.sampleFps(1000/(fpsAccum/fpsFrames)); fpsAccum = 0; fpsFrames = 0; }
 
   drawBg();
   fctx.clearRect(0,0,stageW,stageH);
   Particles.update(dt);
-  Particles.render(fctx);
-  Shake.update(dt);
 
-  if(running){
+  if(S.state === 'play'){
+    if(slowT > 0){
+      slowT -= dt;
+      timeScale = slowT > 0 ? .3 + .7*Math.pow(1 - slowT/SLOW_MS, 2) : 1;
+    } else timeScale = 1;
+    const gdt = dt * timeScale;
+
+    gameMs += dt;
+    const sec = Math.floor(gameMs/1000);
+    if(sec !== lastSec){ lastSec = sec; timeEl.textContent = fmtTime(sec); }
+
+    spawnAcc += gdt;
+    if(spawnAcc >= spawnInterval()){ spawnAcc -= spawnInterval(); spawnWord(); }
+
+    const dangerZone = stageH - 170, deadLine = stageH - 100;
     for(let i=words.length-1;i>=0;i--){
       const w = words[i];
-      w.y += w.speed*dt;
+      w.y += w.speed*gdt;
       let tx = w.x, ty = w.y, sc = 1;
       if(w.hitUntil > now){
         const remain = (w.hitUntil - now) / 170;
-        tx += (Math.random()*2-1) * 5 * remain;
-        ty += (Math.random()*2-1) * 3 * remain;
-        sc = 1 + 0.09 * remain;
+        tx += (Math.random()*2-1) * 3.5 * remain;
+        ty += (Math.random()*2-1) * 2 * remain;
+        sc = 1 + 0.08 * remain;
       }
       w.el.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${sc})`;
-      const dangerZone = stageH - 170;
       if(w.y > dangerZone && !w.danger){ w.danger = true; w.el.classList.add('danger'); }
-      if(w.y > stageH - 100){
-        loseLife(w);
+      if(w.y > deadLine){
         words.splice(i,1);
+        loseLife(w);
+        if(S.state !== 'play') break;
       }
     }
     if(combo > 0){
       comboTimer -= dt;
-      const ratio = Math.max(0, comboTimer/2600);
-      comboBarFill.style.transform = `scaleX(${ratio})`;
+      comboBarFill.style.transform = `scaleX(${Math.max(0, comboTimer/2600)})`;
       if(comboTimer <= 0) resetCombo();
     }
+    drawLaser(now);
   }
 
+  Particles.render(fctx);
+  Shake.update(dt);
   requestAnimationFrame(mainLoop);
 }
 requestAnimationFrame(mainLoop);
 
 /* =========================================================
-   الكتابة (كيبورد فعلي + إدخال جوال) — تدعم العربي والإنكليزي
+   الكتابة (كيبورد فعلي + إدخال جوال) — عربي/إنكليزي مع توحيد الألف
 ========================================================= */
-function isLetterKey(key){
-  if(key.length !== 1) return false;
-  return SETTINGS.lang === 'ar' ? /[\u0621-\u064A]/.test(key) : /[a-zA-Z]/.test(key);
-}
-function normKey(key){
-  return SETTINGS.lang === 'en' ? key.toLowerCase() : key;
-}
-
-function handleKey(e){
-  if(!running) return;
-  const rawKey = e.key;
-  if(!isLetterKey(rawKey)) return;
-  const key = normKey(rawKey);
-
+function handleChar(ch){
+  if(!isLetterKey(ch)) return;
+  const key = normStr(ch);
   if(activeWord && !words.includes(activeWord)) activeWord = null;
 
   if(activeWord){
     keysTotal++;
-    if(normKey(activeWord.text[activeWord.typedCount]) === key){
-      keysCorrect++;
-      activeWord.typedCount++;
-      activeWord.hitUntil = performance.now() + 170;
-      renderWordProgress(activeWord);
-      if(activeWord.typedCount === activeWord.text.length){
-        explode(activeWord);
-        words = words.filter(w=>w!==activeWord);
-        activeWord = null;
-      }
-    } else {
-      resetCombo();
-    }
+    if(activeWord.norm[activeWord.typedCount] === key) hitKey(activeWord, false);
+    else missKey(activeWord);
     updateHud();
     return;
   }
-
-  const candidates = words.filter(w => normKey(w.text[0]) === key);
-  if(candidates.length === 0) return;
-  keysTotal++; keysCorrect++;
-  candidates.sort((a,b)=> b.y - a.y);
-  activeWord = candidates[0];
+  const cands = words.filter(w => w.norm[0] === key);
+  if(!cands.length) return;
+  cands.sort((a,b)=> b.y - a.y);                  // الأقرب للنواة أولًا
+  activeWord = cands[0];
   activeWord.el.classList.add('locked');
-  activeWord.typedCount = 1;
-  activeWord.hitUntil = performance.now() + 170;
-  renderWordProgress(activeWord);
+  keysTotal++;
+  AudioMgr.synth('lock');
+  hitKey(activeWord, true);
   updateHud();
-  if(activeWord.typedCount === activeWord.text.length){
-    explode(activeWord);
-    words = words.filter(w=>w!==activeWord);
+}
+function hitKey(w, first){
+  keysCorrect++;
+  w.typedCount++;
+  w.hitUntil = performance.now() + 170;
+  laserAt = performance.now();
+  renderWordProgress(w);
+  if(!first) AudioMgr.synth('tick', w.typedCount);
+  buzz(6);
+  if(w.typedCount >= w.text.length){
+    words = words.filter(x => x !== w);
     activeWord = null;
+    explode(w);
   }
 }
-window.addEventListener('keydown', handleKey);
+function missKey(w){
+  AudioMgr.synth('wrong');
+  Shake.trigger(1.4);
+  resetCombo();
+  w.el.classList.add('wrong');
+  setTimeout(()=> w.el.classList.remove('wrong'), 140);
+  buzz(18);
+}
 
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){
+    if(S.state === 'play') pauseGame();
+    else if(S.state === 'paused') resumeGame();
+    else if(S.state === 'intro') skipIntro();
+    return;
+  }
+  if(S.state !== 'play' || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  const k = e.key;
+  // مفتاح «لا» في الكيبورد العربي يرسل حرفين معًا
+  if(SETTINGS.lang === 'ar' && k && k.length === 2 && k.charCodeAt(0) === 0x644 && /[اآأإ]/.test(k[1])){
+    handleChar('ل'); handleChar(k[1]); return;
+  }
+  handleChar(k);
+});
 mobileInput.addEventListener('input', ()=>{
   const val = mobileInput.value;
-  for(const ch of val) handleKey({key: ch});
   mobileInput.value = '';
+  if(S.state !== 'play') return;
+  for(const ch of val) handleChar(ch);
 });
-stage.addEventListener('touchstart', ()=> running && mobileInput.focus());
-stage.addEventListener('click', ()=> running && mobileInput.focus());
+function focusInput(){ if(S.state === 'play'){ try{ mobileInput.focus({ preventScroll:true }); }catch(e){ mobileInput.focus(); } } }
+stage.addEventListener('touchstart', focusInput, { passive:true });
+stage.addEventListener('click', focusInput);
+
+/* =========================================================
+   إيقاف مؤقت (زر + Esc + تلقائي عند إخفاء التبويب)
+========================================================= */
+function pauseGame(){
+  if(S.state !== 'play') return;
+  S.state = 'paused';
+  pauseOverlay.style.display = 'flex';
+  AudioMgr.suspend();
+  try{ mobileInput.blur(); }catch(e){}
+}
+function resumeGame(){
+  if(S.state !== 'paused') return;
+  pauseOverlay.style.display = 'none';
+  AudioMgr.resume();
+  S.state = 'play';
+  lastFrame = 0;
+  focusInput();
+}
+pauseBtn.addEventListener('click', (e)=>{ e.stopPropagation(); pauseGame(); });
+resumeBtn.addEventListener('click', resumeGame);
+quitBtn.addEventListener('click', ()=>{ saveProgress(); toMenu(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ lastFrame = 0; pauseGame(); } });
+window.addEventListener('pagehide', pauseGame);
 
 /* =========================================================
    إدارة المراحل (بداية / صعود مستوى / نهاية)
 ========================================================= */
 function startGame(){
-  score=0; lives=3; level=1; wordsDestroyed=0; keysCorrect=0; keysTotal=0;
-  words.forEach(w=>w.el.remove()); words = [];
-  activeWord = null; resetCombo(); comboMax = 0;
+  score = 0; lives = 3; level = 1; wordsDestroyed = 0; keysCorrect = 0; keysTotal = 0;
+  clearWords(); resetCombo(); comboMax = 0;
+  gameMs = 0; spawnAcc = Math.max(0, spawnInterval() - 500); slowT = 0; timeScale = 1; lastSec = -1; livesShown = -1;
+  timeEl.textContent = '00:00';
+  S.state = 'play';
+  stage.classList.add('playing');
   updateHud();
   hud.classList.add('show');
-  running = true;
-  startTime = Date.now();
-  clearInterval(timeTimer); timeTimer = setInterval(tickTime, 500);
-  clearInterval(spawnTimer);
-  spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
 }
 
 function saveProgress(){
-  const best = Math.max(score, getBestScore());
-  localStorage.setItem(BEST_KEY, best);
-  const bestLvl = Math.max(level, getBestLevel());
-  localStorage.setItem(BEST_LEVEL_KEY, bestLvl);
+  Store.set(BEST_KEY, Math.max(score, getBestScore()));
+  Store.set(BEST_LEVEL_KEY, Math.max(level, getBestLevel()));
   refreshBestLabels();
 }
 
@@ -1286,270 +1631,346 @@ function levelUp(){
   level++;
   updateHud();
   saveProgress();
-  running = false;
-  clearInterval(spawnTimer);
+  S.state = 'levelup';
   AudioMgr.play('victory');
+  AudioMgr.duck(.5, .4, .8);
   levelUpOverlay.style.display = 'flex';
   levelUpOverlay.classList.add('show');
   setTimeout(()=>{
     levelUpOverlay.classList.remove('show');
     setTimeout(()=>{
       levelUpOverlay.style.display = 'none';
-      running = true;
-      spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
+      if(S.state === 'levelup') S.state = 'play';
     }, 280);
   }, 1300);
 }
 
-function endGame(won){
-  running = false;
-  clearInterval(spawnTimer);
-  clearInterval(timeTimer);
-  words.forEach(w=>w.el.remove()); words = [];
-  hud.classList.remove('show');
-  resetCombo();
-  AudioMgr.stopLoop('heartbeat', 0.3);
+function countUp(el, to, fmt, dur){
+  const t0 = performance.now();
+  (function step(t){
+    const p = Math.min(1, (t - t0)/dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(to*e));
+    if(p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+function gradeFor(st){
+  const g = st.level*12 + st.acc*0.6 + st.wpm*0.5;
+  return g >= 130 ? 'S' : g >= 100 ? 'A' : g >= 75 ? 'B' : g >= 50 ? 'C' : 'D';
+}
+const GRADE_COLORS = { S:'#ffd28a', A:'#7cf9e0', B:'#dfeef8', C:'#8aa0b4', D:'#ff8291' };
 
-  const elapsed = Math.floor((Date.now()-startTime)/1000);
-  const acc = keysTotal === 0 ? 100 : Math.round((keysCorrect/keysTotal)*100);
+function endGame(){
+  if(S.state === 'over') return;
+  S.state = 'over';
+  stage.classList.remove('playing');
+  AudioMgr.stopLoop('heartbeat', .3);
+  activeWord = null; resetCombo();
+  const st = { score, level, acc:accuracy(), ms:gameMs, combo:comboMax,
+               wpm: gameMs > 3000 ? Math.round((keysCorrect/5)/(gameMs/60000)) : 0 };
+  st.isBest = score > getBestScore() && score > 0;
   saveProgress();
-  const best = getBestScore();
 
-  AudioMgr.play('glitchEffect', { gainMul:0.6 });
+  AudioMgr.synth('down');
+  AudioMgr.play('glitchEffect', { gain:.9 });
+  AudioMgr.duck(.3, .6, 1);
+  buzz([90, 50, 160]);
+  hud.classList.remove('show');
+  crtLayer.className = ''; void crtLayer.offsetWidth; crtLayer.className = 'on';   // انهيار شاشة CRT
+  setTimeout(()=>{ clearWords(); showEnd(st); }, 950);
+}
 
-  overlay.querySelector('.panel').innerHTML = `
-    <h1 class="danger">فشلت مهمة الصد</h1>
-    <p>تمكّن الهجوم من اختراق دفاعات الخادم المحاكى. راجع إحصائياتك أدناه وحاول مجددًا.</p>
-    <div id="statsGrid">
-      <div class="glass box"><div class="lbl">النقاط</div><div class="val">${score}</div></div>
-      <div class="glass box"><div class="lbl">المستوى</div><div class="val">${level}</div></div>
-      <div class="glass box"><div class="lbl">الدقة</div><div class="val">${acc}%</div></div>
-      <div class="glass box"><div class="lbl">الزمن</div><div class="val">${fmtTime(elapsed)}</div></div>
-      <div class="glass box"><div class="lbl">أفضل سلسلة</div><div class="val">${comboMax}</div></div>
-      <div class="glass box"><div class="lbl">أفضل نتيجة</div><div class="val">${best}</div></div>
-    </div>
-    <button id="startBtn">إعادة المهمة</button>
-  `;
+function showEnd(st){
+  if(S.state !== 'over') return;
+  showPanel('endPanel');
   overlay.style.display = 'flex';
   overlay.classList.add('show');
-  if(AudioMgr.isLoaded) AudioMgr.playLoop('waitingLoop', { fadeInDur:1.2 });
-  document.getElementById('startBtn').addEventListener('click', beginSequence);
+  const letter = $('gradeLetter'), grade = gradeFor(st);
+  letter.textContent = '–'; letter.style.opacity = '.25'; letter.classList.remove('pop');
+  $('newBest').style.display = st.isBest ? 'block' : 'none';
+  $('stBest').textContent = getBestScore();
+  countUp($('stScore'), st.score, v=>String(v), 900);
+  countUp($('stLevel'), st.level, v=>String(v), 600);
+  countUp($('stAcc'), st.acc, v=>v + '%', 800);
+  countUp($('stTime'), Math.floor(st.ms/1000), v=>fmtTime(v), 800);
+  countUp($('stCombo'), st.combo, v=>String(v), 700);
+  countUp($('stWpm'), st.wpm, v=>String(v), 800);
+  setTimeout(()=>{
+    if(S.state !== 'over') return;
+    letter.textContent = grade; letter.style.color = GRADE_COLORS[grade]; letter.style.opacity = '1';
+    void letter.offsetWidth; letter.classList.add('pop');
+    if(st.isBest) AudioMgr.play('victory', { gain:.8 }); else AudioMgr.synth('lock');
+  }, 950);
+  AudioMgr.playLoop('waitingLoop', { fadeIn:2.2, gain:.8 });
+  setTimeout(()=>{ crtLayer.className = ''; }, 500);
 }
 
 /* =========================================================
-   المقدمة السينمائية
+   مساعدات المشاهد — خط زمني واحد مطلق (بالميلي ثانية) لكل مقدمة
+   ولأي إلغاء/تخطي نرفع S.token فتتوقف كل أحداث المقدمة القديمة تلقائيًا.
 ========================================================= */
-
-async function performEyeBlinks(){
-  for(let i=0;i<2;i++){
-    irisSet(true, true);
-    Shake.trigger(3);
-    AudioMgr.play('uiHit', { gainMul:0.4, rateJitter:0.25 });
-    await wait(90);
-    irisSet(false, true);
-    await wait(190);
-  }
+function tl(tok){
+  const t0 = performance.now();
+  return {
+    until(ms){ return new Promise(res=> setTimeout(()=> res(tok === S.token), Math.max(0, ms - (performance.now() - t0)))); },
+    at(ms, fn){ setTimeout(()=>{ if(tok === S.token){ try{ fn(); }catch(e){} } }, Math.max(0, ms - (performance.now() - t0))); }
+  };
 }
 
-async function irisTransitionToBreach(){
-  irisSet(true, false);
-  Shake.trigger(4);
-  await wait(600);
-  awakenScene.classList.remove('show');
-  awakenScene.style.display = 'none';
-  await wait(140);
-  irisSet(false, false);
-  await wait(600);
-}
-
-async function playAwakenSequence(){
-  awakenScene.style.display = 'flex';
-  awakenLabel.classList.remove('show','punch');
+function hideScenes(){
+  [awakenScene, breachOverlay, defenseOverlay].forEach(el=>{ el.style.display = 'none'; el.classList.remove('show'); });
+  awakenScene.classList.remove('fadeOut');
   awakenCenterMark.classList.remove('show','opening');
+  awakenLabel.classList.remove('show','punch');
   awakenNodes.forEach(n=> n.classList.remove('on','pulse'));
   awakenBeams.forEach(b=> b.classList.remove('on'));
-  irisSet(false, false);
-  irisWipe.classList.remove('animate');
-
-  requestAnimationFrame(()=> requestAnimationFrame(()=> awakenScene.classList.add('show')));
-
-  await wait(500);
-
-  // إضاءة العقد الثماني مع خطوط طاقة تمتد من المركز الى كل عقدة
-  for(let i=0;i<awakenNodes.length;i++){
-    awakenNodes[i].classList.add('on');
-    if(awakenBeams[i]) awakenBeams[i].classList.add('on');
-    AudioMgr.play('uiHit', { gainMul:0.4, rateJitter:0.08 });
-    await wait(105);
-  }
-  awakenNodes.forEach(n=> n.classList.add('pulse'));
-  AudioMgr.play('whoosh', { gainMul:0.4 });
-  await wait(200);
-
-  // ظهور تسميات الحالة بحركة "دفعة" قوية بدل التلاشي البسيط
-  for(const label of AWAKEN_LABELS){
-    awakenLabel.textContent = label;
-    awakenLabel.classList.remove('punch');
-    void awakenLabel.offsetWidth;
-    awakenLabel.classList.add('show','punch');
-    AudioMgr.play('uiHit', { gainMul:0.35, rateJitter:0.15 });
-    await wait(480);
-    awakenLabel.classList.remove('show');
-    await wait(140);
-  }
-
-  // فتح "العين" المركزية — كشف تدريجي من نقطة الى الشكل الكامل بدل ظهور مسطح
-  awakenCenterMark.classList.add('opening');
-  AudioMgr.play('whoosh');
-  Shake.trigger(2.5);
-  await wait(260);
-  awakenCenterMark.classList.add('show');
-  await wait(420);
-
-  // رمشتان سريعتان
-  await performEyeBlinks();
-  await wait(180);
-
-  // اغلاق العين ببطء والانتقال السينمائي الى مشهد الاختراق
-  await irisTransitionToBreach();
+  irisWipe.classList.remove('animate','closed','fastBlink');
+  breachSub.classList.remove('show'); breachStatus.classList.remove('show'); breachTitle.classList.remove('pulse');
+  breachTitle.textContent = '';
+  emberField.textContent = '';
+  countdownNum.textContent = ''; countdownNum.classList.remove('countdownActive');
+  skipBtn.style.display = 'none';
 }
 
 function revealWords(el, text, startDelay, stepDelay){
-  el.innerHTML = text.split(' ').map((w,i)=>
-    `<span class="reveal-word" style="animation-delay:${startDelay + i*stepDelay}ms">${w}</span>`
-  ).join(' ');
+  el.textContent = '';
+  const parts = text.split(' ');
+  parts.forEach((w, i)=>{
+    const s = document.createElement('span');
+    s.className = 'reveal-word';
+    s.style.animationDelay = (startDelay + i*stepDelay) + 'ms';
+    s.textContent = w;
+    el.appendChild(s);
+    if(i < parts.length-1) el.appendChild(document.createTextNode(' '));
+  });
 }
 
 function spawnEmbers(count){
-  emberField.innerHTML = '';
+  emberField.textContent = '';
   for(let i=0;i<count;i++){
     const e = document.createElement('div');
     e.className = 'ember';
-    const left = Math.random()*100;
-    const dur = 3.2 + Math.random()*2.4;
-    const delay = Math.random()*3.5;
-    const drift = (Math.random()*40-20).toFixed(0)+'px';
-    e.style.left = left+'%';
-    e.style.setProperty('--drift', drift);
-    e.style.animationDuration = dur+'s';
-    e.style.animationDelay = delay+'s';
+    e.style.left = (Math.random()*100) + '%';
+    e.style.setProperty('--drift', (Math.random()*40-20).toFixed(0) + 'px');
+    e.style.animationDuration = (3.2 + Math.random()*2.4) + 's';
+    e.style.animationDelay = (Math.random()*3.5) + 's';
     emberField.appendChild(e);
   }
 }
 
-async function playBreachSequence(){
-  const titleText = breachTitle.textContent;
-  breachTitle.classList.remove('pulse');
-  revealWords(breachTitle, titleText, 150, 110);
-  breachSub.classList.remove('show');
-  breachStatus.classList.remove('show');
-  spawnEmbers(16);
+/* =========================================================
+   المقدمة السينمائية — ترتيب المشاهد مبني على أزمنة الأصوات الفعلية
+   (الأزمنة بالميلي ثانية من لحظة الضغط على «دخول»)
 
-  AudioMgr.play('hackStart');
-  breachOverlay.style.display = 'flex';
-  requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
+   0.0s    استيقاظ مركز القيادة (بصري)      ← ui-hit ×8 مع العقد، whoosh، تسميات، فتح العين، رمشتان
+   5.0s    همهمة glitch-ambient (من ثانيتها 1.3 — الأولى صامتة) تحت المشهد القادم
+   5.56s   بدء الاختراق: hack-start يصعد (ذروته الأولى عند +2.00s، الثانية عند +4.44s)
+           + hack-static ثابتة تحتها (انفجاراتها عند +3.1s و +4.4s تطابق ذروة hack-start الثانية)
+   7.56s   الذروة 1  ← ظهور العنوان + أول صفارة alarm (تبدأ من ثانيتها 1.6 لتصادف الذروة) + اهتزاز + وميض
+   8.26s   السطر الثاني
+   10.0s   الذروة 2  ← حالة «جارِ تفعيل نظام الصد…» + وميض أحمر
+   11.26s  hack-end (ضربة إغلاق) وتلاشي الشاشة، وخفض الموسيقى
+   11.85s  شاشة العد التنازلي
+   12.1s / 13.1s / 14.1s   count-3 / 2 / 1  (كل ملف ≈ 1.0ث فنعدّ كل 1000ms)
+   15.1s   «انطلق»: kick-impact (ضربته الحقيقية عند 1.22ث من الملف فنبدأه من 1.12) = بداية اللعب
+========================================================= */
+const T = { NODE0:500, NODE_STEP:105, WHOOSH:1340, LABEL0:1540, LABEL_STEP:620, EYE:3500, EYE_SHOW:3760,
+            BLINK:4180, IRIS:4920, AWAKEN_OFF:5520, AMBIENT:5000, BREACH:5560,
+            HIT1:7560, HIT2:10000, END:11260, C3:12100 };
 
-  AudioMgr.play('hackStatic', { gainMul:0.8 });
-  await new Promise(r=> setTimeout(r, 500));
-  AudioMgr.play('alarm', { gainMul:0.7 });
-  await new Promise(r=> setTimeout(r, 800));
-  breachTitle.classList.add('pulse');
+async function runFullIntro(tok){
+  const L = tl(tok);
+  hideScenes();
+  skipBtn.style.display = 'block';
 
-  breachSub.classList.add('show');
-  await new Promise(r=> setTimeout(r, 550));
-
-  breachStatus.classList.add('show');
-
-  await new Promise(r=> setTimeout(r, 3200));
-
-  AudioMgr.play('hackEnd');
-  breachOverlay.classList.remove('show');
-  await new Promise(r=> setTimeout(r, 500));
-  breachOverlay.style.display = 'none';
-  emberField.innerHTML = '';
-}
-
-async function playDefenseSequence(){
-  defenseOverlay.style.display = 'flex';
-  defenseOverlay.classList.add('show');
-  countdownNum.textContent = '';
-  await new Promise(r=> setTimeout(r, 500));
-
-  const steps = [ {num:'٣', snd:'count3'}, {num:'٢', snd:'count2'}, {num:'١', snd:'count1'} ];
-  for(const step of steps){
-    countdownNum.textContent = step.num;
-    countdownNum.classList.remove('countdownActive');
-    void countdownNum.offsetWidth;
-    countdownNum.classList.add('countdownActive');
-    AudioMgr.play(step.snd);
-    setTimeout(()=>{
-      flashLayer.style.background = '#7cf9e0';
-      flashLayer.style.opacity = '0.18';
-      requestAnimationFrame(()=>{ flashLayer.style.transition = 'opacity .28s ease'; flashLayer.style.opacity = '0'; });
-    }, 120);
-    await new Promise(r=> setTimeout(r, 820));
+  /* ---- 1) استيقاظ مركز القيادة ---- */
+  awakenScene.style.display = 'flex';
+  irisSet(false, false); irisWipe.classList.remove('animate');
+  requestAnimationFrame(()=> requestAnimationFrame(()=> awakenScene.classList.add('show')));
+  for(let i=0;i<awakenNodes.length;i++){
+    L.at(T.NODE0 + i*T.NODE_STEP, ()=>{
+      awakenNodes[i].classList.add('on');
+      if(awakenBeams[i]) awakenBeams[i].classList.add('on');
+      AudioMgr.play('uiHit', { gain:.45, jitter:.08, group:'intro' });
+    });
   }
+  L.at(T.WHOOSH, ()=>{ awakenNodes.forEach(n=> n.classList.add('pulse')); AudioMgr.play('whoosh', { gain:.5, group:'intro' }); });
+  AWAKEN_LABELS.forEach((label, k)=>{
+    const t = T.LABEL0 + k*T.LABEL_STEP;
+    L.at(t, ()=>{
+      awakenLabel.textContent = label;
+      awakenLabel.classList.remove('punch'); void awakenLabel.offsetWidth;
+      awakenLabel.classList.add('show','punch');
+      AudioMgr.play('uiHit', { gain:.4, jitter:.15, group:'intro' });
+    });
+    L.at(t + 480, ()=> awakenLabel.classList.remove('show'));
+  });
+  L.at(T.EYE, ()=>{ awakenCenterMark.classList.add('opening'); AudioMgr.play('whoosh', { group:'intro' }); Shake.trigger(2.5); });
+  L.at(T.EYE_SHOW, ()=> awakenCenterMark.classList.add('show'));
+  [0, 280].forEach(d=>{
+    L.at(T.BLINK + d, ()=>{ irisSet(true, true); Shake.trigger(3); AudioMgr.play('uiHit', { gain:.4, jitter:.25, group:'intro' }); });
+    L.at(T.BLINK + d + 90, ()=> irisSet(false, true));
+  });
+  L.at(T.IRIS, ()=>{ irisSet(true, false); Shake.trigger(4); });
+  L.at(T.AWAKEN_OFF, ()=>{ awakenScene.classList.remove('show'); awakenScene.style.display = 'none'; });
+  L.at(T.BREACH + 100, ()=> irisSet(false, false));
 
-  AudioMgr.playClip('kickImpact', 0, 0.9);
-  defenseOverlay.classList.remove('show');
-  await new Promise(r=> setTimeout(r, 280));
-  defenseOverlay.style.display = 'none';
+  /* ---- 2) الاختراق ---- */
+  L.at(T.AMBIENT, ()=>{ if(AudioMgr.has('glitchAmbient')) AudioMgr.play('glitchAmbient', { off:1.3, dur:10.6, fade:1.6, fadeIn:1.2, group:'intro' }); });
+  L.at(T.BREACH, ()=>{
+    AudioMgr.play('hackStart', { group:'intro' });
+    AudioMgr.play('hackStatic', { group:'intro' });
+    breachTitle.textContent = ''; breachTitle.classList.remove('pulse');
+    breachSub.classList.remove('show'); breachStatus.classList.remove('show');
+    spawnEmbers(16);
+  });
+  L.at(T.BREACH + 100, ()=>{
+    breachOverlay.style.display = 'flex';
+    requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
+  });
+  L.at(T.HIT1 - 100, ()=> AudioMgr.play('alarm', { group:'intro' }));
+  L.at(T.HIT1, ()=>{ revealWords(breachTitle, BREACH_TITLE_TEXT, 0, 110); Shake.trigger(6); flash('#ffffff', .25, .35); buzz(40); });
+  L.at(T.HIT1 + 600, ()=> breachTitle.classList.add('pulse'));
+  L.at(T.HIT1 + 700, ()=> breachSub.classList.add('show'));
+  L.at(T.HIT2, ()=>{ breachStatus.classList.add('show'); Shake.trigger(4); flash('#ff3b4e', .3, .4); });
+  L.at(T.END, ()=>{ AudioMgr.play('hackEnd', { group:'intro' }); AudioMgr.duck(.5, .6, 1); breachOverlay.classList.remove('show'); });
+  L.at(T.C3 - 250, ()=>{ breachOverlay.style.display = 'none'; emberField.textContent = ''; });
+
+  /* ---- 3) العد التنازلي ثم الانطلاق ---- */
+  return runCountdown(tok, L, T.C3);
 }
 
-async function beginSequence(){
-  AudioMgr.stopLoop('waitingLoop', 0.4);
-  AudioMgr.play('uiHit');
-  overlay.style.display = 'none';
-  settingsPanel.style.display = 'none';
-  startPanel.style.display = 'block';
-  resizeCanvases();
-  await playAwakenSequence();
-  AudioMgr.playLoop('glitchAmbient', { fadeInDur:1.0 });
-  await playBreachSequence();
-  await playDefenseSequence();
-  AudioMgr.stopLoop('glitchAmbient', 1.0);
+async function runCountdown(tok, L, t3){
+  L.at(t3 - 250, ()=>{
+    defenseOverlay.style.display = 'flex';
+    countdownNum.textContent = '';
+    requestAnimationFrame(()=> requestAnimationFrame(()=> defenseOverlay.classList.add('show')));
+  });
+  const steps = [ {num:'٣', snd:'count3'}, {num:'٢', snd:'count2'}, {num:'١', snd:'count1'} ];
+  steps.forEach((s, i)=>{
+    const t = t3 + i*1000;
+    L.at(t - 80, ()=> AudioMgr.play(s.snd, { group:'intro' }));          // بداية الصوت الفعلية عند ~0.1ث من الملف
+    L.at(t, ()=>{
+      countdownNum.textContent = s.num;
+      countdownNum.classList.remove('countdownActive'); void countdownNum.offsetWidth;
+      countdownNum.classList.add('countdownActive');
+      buzz(12);
+    });
+    L.at(t + 120, ()=> flash('#7cf9e0', .18, .28));
+  });
+  const go = t3 + 3000;
+  L.at(go - 100, ()=>{ AudioMgr.play('kickImpact', { group:'intro' }); AudioMgr.duck(.35, .5, 1.2); });
+  const alive = await L.until(go);
+  if(!alive) return false;
+  goLive(tok);
+  return true;
+}
+
+function goLive(tok){
+  if(tok !== S.token) return;
+  skipBtn.style.display = 'none';
+  defenseOverlay.classList.remove('show');
+  setTimeout(()=>{ if(S.token === tok) defenseOverlay.style.display = 'none'; }, 300);
+  flash('#ffffff', .35, .4);
+  Shake.trigger(9);
+  buzz([30, 20, 60]);
   startGame();
-  mobileInput.focus();
+  focusInput();
+}
+
+function beginSequence(){
+  if(S.state === 'intro' || S.state === 'play' || S.state === 'paused' || S.state === 'levelup') return;
+  const full = !S.introSeen;                       // المقدمة الكاملة أول مرة فقط، وبعدها نسخة سريعة (3 ثوانٍ)
+  S.introSeen = true;
+  const tok = ++S.token;
+  S.state = 'intro';
+  stage.classList.remove('playing');
+  AudioMgr.unlock();
+  AudioMgr.stopLoop('waitingLoop', full ? .6 : .3);
+  AudioMgr.play('uiHit', { gain:.8 });
+  overlay.style.display = 'none';
+  showPanel('startPanel');
+  crtLayer.className = '';
+  hud.classList.remove('show');
+  clearWords();
+  fitViewport();
+  hideScenes();
+  if(full) runFullIntro(tok);
+  else runCountdown(tok, tl(tok), 250);
+}
+
+function skipIntro(){
+  if(S.state !== 'intro') return;
+  const tok = ++S.token;
+  AudioMgr.stopGroup('intro', .25);
+  hideScenes();
+  runCountdown(tok, tl(tok), 250);
+}
+
+function toMenu(){
+  S.token++;
+  S.state = 'menu';
+  stage.classList.remove('playing');
+  clearWords();
+  hud.classList.remove('show');
+  resetCombo();
+  pauseOverlay.style.display = 'none';
+  levelUpOverlay.style.display = 'none'; levelUpOverlay.classList.remove('show');
+  crtLayer.className = '';
+  AudioMgr.stopGroup('intro', .2);
+  AudioMgr.stopLoop('heartbeat', .2);
+  AudioMgr.resume();
+  hideScenes();
+  overlay.style.display = 'flex';
+  overlay.classList.add('show');
+  showPanel('startPanel');
+  refreshBestLabels();
+  if(!AudioMgr.hasLoop('waitingLoop')) AudioMgr.playLoop('waitingLoop', { fadeIn:1.5 });
 }
 
 startBtn.addEventListener('click', beginSequence);
+$('retryBtn').addEventListener('click', beginSequence);
+$('menuBtn').addEventListener('click', toMenu);
+skipBtn.addEventListener('click', skipIntro);
 
-let waitingLoopArmed = false;
-async function armWaitingLoop(){
-  if(waitingLoopArmed) return;
-  waitingLoopArmed = true;
-  AudioMgr.unlock();
-  await AudioMgr.preloadAll();
-  if(overlay.style.display !== 'none'){
-    AudioMgr.playLoop('waitingLoop', { fadeInDur:1.5 });
-  }
+/* =========================================================
+   شاشة الإقلاع: تحميل حقيقي للأصوات بشريط تقدّم ← «المس للدخول» (لمسة واحدة تفتح الصوت)
+========================================================= */
+function setBoot(p){
+  const v = Math.round(Math.max(0, Math.min(1, p))*100);
+  bootFill.style.width = v + '%';
+  bootPct.textContent = v + '%';
 }
-['pointerdown','keydown','touchstart'].forEach(ev=>
-  window.addEventListener(ev, armWaitingLoop, { once:true, passive:true })
-);
+async function boot(){
+  setBoot(0);
+  bootMsg.textContent = 'جارٍ تحميل الأصوات…';
+  let res = { missing:[] };
+  try{ res = await AudioMgr.preloadEssential(setBoot); }catch(e){}
+  setBoot(1);
+  bootMsg.textContent = res.missing.length ? 'تعذّر تحميل بعض الأصوات — ستعمل اللعبة بدونها' : 'جاهز';
+  bootEnter.style.display = 'inline-block';
+  S.state = 'boot-ready';
+}
+function enterGame(){
+  if(S.state !== 'boot-ready') return;
+  S.state = 'menu';
+  AudioMgr.unlock();
+  bootEl.classList.add('hide');
+  setTimeout(()=>{ bootEl.style.display = 'none'; }, 750);
+  fitViewport();
+  overlay.style.display = 'flex';
+  overlay.classList.add('show');
+  showPanel('startPanel');
+  AudioMgr.playLoop('waitingLoop', { fadeIn:1.6 });
+  AudioMgr.loadLazy('glitchAmbient');               // ملف الهمهمة الكبير (1.2MB) يُحمَّل بالخلفية بعد القائمة
+}
+bootEl.addEventListener('click', enterGame);
+window.addEventListener('keydown', (e)=>{ if(S.state === 'boot-ready' && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); enterGame(); } });
 
 /* =========================================================
-   إعادة ضبط سرعة التوليد عند تغيّر المستوى
-========================================================= */
-setInterval(()=>{
-  if(running){
-    clearInterval(spawnTimer);
-    spawnTimer = setInterval(spawnWord, Math.max(1600-level*80,700));
-  }
-}, 3000);
-
-/* =========================================================
-   إيقاف مؤقت تلقائي عند إخفاء التبويب
-========================================================= */
-document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden){ lastFrame = 0; }
-});
-
-/* =========================================================
-   تفعيل التثبيت كتطبيق على الهاتف (PWA)
+   تثبيت التطبيق (PWA) + تنبيه التحديث
 ========================================================= */
 let deferredInstallPrompt = null;
-const installBtn = document.getElementById('installBtn');
+const installBtn = $('installBtn');
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault();
   deferredInstallPrompt = e;
@@ -1558,19 +1979,25 @@ window.addEventListener('beforeinstallprompt', (e)=>{
 installBtn.addEventListener('click', async ()=>{
   if(!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
+  try{ await deferredInstallPrompt.userChoice; }catch(e){}
   deferredInstallPrompt = null;
   installBtn.style.display = 'none';
 });
 window.addEventListener('appinstalled', ()=>{ installBtn.style.display = 'none'; });
 
 if('serviceWorker' in navigator){
+  const hadController = !!navigator.serviceWorker.controller;
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(r=>{ try{ r.update(); }catch(e){} }).catch(()=>{});
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(hadController) showToast('تم تحديث اللعبة — أعد فتحها لتفعيل النسخة الجديدة');
   });
 }
 
-resizeCanvases();
+/*__TEST_HOOK__*/
+fitViewport();
+boot();
 
 })();
 </script>
