@@ -348,6 +348,41 @@
     #gradeLetter{ font-size:52px; } #bootTitle{ font-size:26px; }
     .vrow label{ min-width:70px; }
   }
+
+  /* ===== رادار الاختراق التفاعلي ===== */
+  #radarWrap{ --rc:#ff3b4e; width:230px; height:230px; margin-bottom:18px; transition:filter .4s ease; }
+  #radarWrap.alert{ filter:drop-shadow(0 0 26px rgba(255,59,78,.75)); }
+  #radarWrap.def{ --rc:#3fe8c9; filter:drop-shadow(0 0 22px rgba(63,232,201,.55)); }
+  #radarWrap.def::before, #radarWrap.def::after{ border-color:rgba(63,232,201,.55); }
+  #radarWrap.def .radarRing{ stroke:rgba(63,232,201,.4); }
+  #radarWrap.def .radarCross{ stroke:rgba(63,232,201,.25); }
+  #radarSvg.rdOn .radarBlip{ display:none; }
+  .rdDisc{ fill:var(--rc); fill-opacity:.05; stroke:none; }
+  .rdTick{ stroke:var(--rc); stroke-opacity:.45; stroke-width:.8; }
+  .rdTick.major{ stroke-opacity:.9; stroke-width:1.4; }
+  .rdSlice{ fill:var(--rc); }
+  .rdLead{ stroke:var(--rc); stroke-width:1.5; stroke-linecap:round; }
+  .rdLeadGlow{ stroke:var(--rc); stroke-width:5; stroke-opacity:.22; stroke-linecap:round; }
+  .rdGlow{ fill:var(--rc); fill-opacity:.2; }
+  .rdDot{ fill:var(--rc); }
+  .rdTrail{ stroke:var(--rc); stroke-width:1.3; stroke-linecap:round; }
+  .rdLock{ fill:none; stroke:#fff; stroke-width:.9; stroke-opacity:.85; }
+  .rdBurst{ fill:none; stroke:var(--rc); stroke-width:1.6; }
+  .rdShock{ position:absolute; inset:0; border-radius:50%; border:2px solid var(--rc); pointer-events:none; animation:rdShock .9s ease-out forwards; }
+  @keyframes rdShock{ 0%{ transform:scale(.6); opacity:.95; } 100%{ transform:scale(1.9); opacity:0; } }
+  .radarCount{ margin:-4px 0 14px; font-size:12.5px; letter-spacing:1.5px; color:var(--danger2); min-height:18px; text-shadow:0 0 10px rgba(255,59,78,.6); }
+  .radarCount.alert{ color:var(--danger); animation:cntBlink .45s steps(2) infinite; }
+  .radarCount.def{ color:var(--core2); text-shadow:0 0 10px rgba(63,232,201,.6); }
+  @keyframes cntBlink{ 50%{ opacity:.35; } }
+  #breachTitle.hitGlitch{ animation:titleHit .6s steps(2) 1; }
+  @keyframes titleHit{
+    0%{ transform:translateX(0); text-shadow:-4px 0 #3fe8c9, 4px 0 #ff3b4e; }
+    25%{ transform:translateX(5px) skewX(-6deg); }
+    50%{ transform:translateX(-4px); text-shadow:4px 0 #3fe8c9, -4px 0 #ff3b4e; }
+    100%{ transform:none; }
+  }
+  @media (max-width:640px){ #radarWrap{ width:196px; height:196px; } }
+  @media (max-height:560px){ #radarWrap{ width:136px; height:136px; margin-bottom:8px; } }
 </style>
 </head>
 <body>
@@ -869,40 +904,8 @@ const AudioMgr = (() => {
     p.linearRampToValueAtTime(1, t + .02 + hold + rel);
   }
 
-  /* ---- أصوات مولَّدة (لا تحتاج ملفات) ---- */
-  function tone(type, f0, f1, dur, vol0, lp, when){
-    const c = ctx; if(!c) return;
-    const t = c.currentTime + (when || 0);
-    const o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(f0, t);
-    if(f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol0, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    let nd = o;
-    if(lp){ const q = c.createBiquadFilter(); q.type = 'lowpass'; q.frequency.value = lp; o.connect(q); nd = q; }
-    nd.connect(g); g.connect(busSfx); o.start(t); o.stop(t + dur + .03);
-  }
-  function hiss(dur, vol0, f0, f1, type, when){
-    const c = ctx; if(!c || !noiseBuf) return;
-    const t = c.currentTime + (when || 0);
-    const s = c.createBufferSource(), g = c.createGain(), q = c.createBiquadFilter();
-    s.buffer = noiseBuf; q.type = type || 'lowpass';
-    q.frequency.setValueAtTime(f0, t); q.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(vol0, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    s.connect(q); q.connect(g); g.connect(busSfx); s.start(t); s.stop(t + dur + .03);
-  }
-  function synth(kind, a){
-    if(!ctx || ctx.state !== 'running') return;
-    try{
-      switch(kind){
-        case 'tick':  { const f = 620 + Math.min(a|0, 14)*42; tone('sine', f, f*1.02, .05, .05); tone('triangle', f*2, f*2, .03, .016); break; }
-        case 'wrong': tone('square', 170, 85, .16, .055, 900); break;
-        case 'lock':  tone('triangle', 880, 880, .07, .06); tone('triangle', 1320, 1320, .09, .06, 0, .07); break;
-        case 'hit':   hiss(.5, .12, 2400, 120); tone('sine', 95, 38, .45, .14); break;          // خسارة روح
-        case 'click': tone('sine', 520, 380, .06, .05); break;
-        case 'down':  tone('sawtooth', 330, 50, 1.1, .12, 900); hiss(1, .14, 2000, 80); break;  // نهاية اللعبة
-      }
-    }catch(e){}
-  }
+  /* ---- لا أصوات مولَّدة: الصوت فقط من ملفات sounds/ ---- */
+  function synth(){}
 
   return { unlock, resume, suspend, ensureCtx, setVolumes, preloadEssential, loadLazy, play, stopGroup,
            playLoop, stopLoop, hasLoop, duck, synth,
@@ -1716,7 +1719,186 @@ function tl(tok){
   };
 }
 
+/* =========================================================
+   رادار الاختراق التفاعلي (يُستدعى من المقدمة الكاملة فقط)
+   مسح → اكتشاف أهداف واحدًا واحدًا → إنذار (ذروة 1) وتقترب الأهداف من النواة
+   → ذروة 2: يتحول الرادار للأزرق المخضرّ (تفعيل الدفاع) وتنفجر الأهداف عند المركز.
+========================================================= */
+const Radar = (() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const wrap = $('radarWrap'), svg = $('radarSvg'), oldSweep = $('radarSweep');
+  let layer = null, sweepG = null, counter = null, blips = [], fx = [];
+  let raf = 0, phase = 'idle', t = 0, tPhase = 0, last = 0, theta = 0, found = 0;
+  const ALERT_SECS = 2.44;                                  // من الذروة 1 إلى الذروة 2
+  const rad = (d) => d*Math.PI/180;
+  const px = (a, r) => (100 + r*Math.sin(rad(a))).toFixed(2);
+  const py = (a, r) => (100 - r*Math.cos(rad(a))).toFixed(2);
+  const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
+
+  function mk(tag, attrs, parent){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    if(parent) parent.appendChild(e);
+    return e;
+  }
+  function setCount(txt, cls){
+    if(!counter) return;
+    counter.textContent = txt;
+    counter.className = 'radarCount' + (cls ? ' ' + cls : '');
+  }
+  function shock(){
+    const s = document.createElement('div');
+    s.className = 'rdShock';
+    wrap.appendChild(s);
+    setTimeout(()=> s.remove(), 1000);
+  }
+  function burst(x, y, delay){
+    const c = mk('circle', { cx:x, cy:y, r:3, class:'rdBurst', opacity:0 }, layer);
+    fx.push({ el:c, age:-(delay || 0), life:.7 });
+  }
+
+  function build(){
+    layer = mk('g', {}, svg);
+    mk('circle', { cx:100, cy:100, r:90, class:'rdDisc' }, layer);
+    [45, 135].forEach(a => mk('line', { x1:px(a,90), y1:py(a,90), x2:px(a+180,90), y2:py(a+180,90), class:'radarCross' }, layer));
+    const n = Quality.tier === 'low' ? 36 : 72;
+    for(let i=0;i<n;i++){
+      const a = i*360/n, major = (i % (n/12) === 0), r1 = major ? 79 : 84.5;
+      mk('line', { x1:px(a,r1), y1:py(a,r1), x2:px(a,90), y2:py(a,90), class: major ? 'rdTick major' : 'rdTick' }, layer);
+    }
+    sweepG = mk('g', { style:'transform-origin:100px 100px' }, layer);       // نقطة الدوران = مركز الرادار
+    const slices = Quality.tier === 'low' ? 6 : 12, span = 4;
+    for(let i=0;i<slices;i++){
+      const a0 = -(i+1)*span, a1 = -i*span;
+      mk('path', { d:'M100,100 L' + px(a0,90) + ',' + py(a0,90) + ' A90,90 0 0,1 ' + px(a1,90) + ',' + py(a1,90) + ' Z',
+                   class:'rdSlice', 'fill-opacity':(0.5*Math.pow(1 - i/slices, 1.6)).toFixed(3) }, sweepG);
+    }
+    mk('line', { x1:100, y1:100, x2:100, y2:10, class:'rdLeadGlow' }, sweepG);
+    mk('line', { x1:100, y1:100, x2:100, y2:10, class:'rdLead' }, sweepG);
+
+    const slots = [0,1,2,3,4,5,6,7].sort(() => Math.random() - .5);
+    blips = slots.map(slot => {
+      const g = mk('g', { opacity:0 }, layer);
+      const trail = mk('line', { class:'rdTrail', opacity:0 }, g);
+      const glow = mk('circle', { r:7, class:'rdGlow' }, g);
+      const dot = mk('circle', { r:3.1, class:'rdDot' }, g);
+      const ring = mk('circle', { r:8.5, class:'rdLock', 'stroke-dasharray':'5 4', opacity:0 }, g);
+      return { a: slot*45 + 8 + (Math.random()*2-1)*13, r0: 44 + Math.random()*40, r: 0, g, trail, glow, dot, ring,
+               lit:0, seen:false, delay:Math.random()*.35, gone:false };
+    });
+    blips.forEach(b => place(b, b.r0));
+
+    counter = document.createElement('div');
+    counter.className = 'radarCount';
+    wrap.insertAdjacentElement('afterend', counter);
+  }
+
+  function place(b, r){
+    b.r = r;
+    const x = px(b.a, r), y = py(b.a, r);
+    b.dot.setAttribute('cx', x);  b.dot.setAttribute('cy', y);
+    b.glow.setAttribute('cx', x); b.glow.setAttribute('cy', y);
+    b.ring.setAttribute('cx', x); b.ring.setAttribute('cy', y);
+  }
+
+  function loop(now){
+    if(!layer) return;
+    const dt = Math.min((now - last)/1000, .05); last = now;
+    t += dt; tPhase += dt;
+
+    const w = phase === 'scan' ? 120 + 95*Math.min(t, 1.9) : phase === 'alert' ? 330 : 190;   // سرعة الدوران °/ث
+    const step = w*dt, prev = theta;
+    theta = (theta + step) % 360;
+    sweepG.style.transform = 'rotate(' + theta.toFixed(1) + 'deg)';
+
+    for(let i=0;i<blips.length;i++){
+      const b = blips[i];
+      if(b.gone) continue;
+      const d = (((b.a - prev) % 360) + 360) % 360;
+      if(phase === 'scan' && d <= step){                    // مرّ الشعاع على الهدف
+        b.lit = 1;
+        if(!b.seen){ b.seen = true; found++; setCount('تهديدات مكتشفة: ' + found); }
+      }
+      if(phase === 'scan'){
+        b.lit = Math.max(0, b.lit - dt/1.25);
+        b.g.setAttribute('opacity', b.seen ? (0.28 + 0.72*b.lit).toFixed(2) : 0);
+      } else if(phase === 'alert'){
+        const p = clamp01((tPhase - b.delay)/(ALERT_SECS - .35));
+        const r = b.r0*(1 - Math.pow(p, 2.2));
+        place(b, r);
+        const L = Math.min(18, (b.r0 - r)*.9);
+        b.trail.setAttribute('x1', px(b.a, r));     b.trail.setAttribute('y1', py(b.a, r));
+        b.trail.setAttribute('x2', px(b.a, r + L)); b.trail.setAttribute('y2', py(b.a, r + L));
+        b.trail.setAttribute('opacity', L > 1 ? .7 : 0);
+        b.ring.setAttribute('opacity', .9);
+        b.ring.setAttribute('stroke-dashoffset', ((t*28) % 9).toFixed(1));
+        b.dot.setAttribute('r', (3.1 + 1.1*Math.sin(t*20 + i)).toFixed(2));
+        b.g.setAttribute('opacity', (0.8 + 0.2*Math.sin(t*16 + i*1.7)).toFixed(2));
+      } else if(phase === 'defend'){
+        const f = clamp01(1 - tPhase/.45);
+        b.g.setAttribute('opacity', f.toFixed(2));
+        if(f <= 0) b.gone = true;
+      }
+    }
+
+    for(let i=fx.length-1;i>=0;i--){                          // انفجارات المركز
+      const f = fx[i];
+      f.age += dt;
+      if(f.age < 0) continue;
+      const p = f.age/f.life;
+      if(p >= 1){ f.el.remove(); fx.splice(i,1); continue; }
+      f.el.setAttribute('r', (3 + 30*p).toFixed(1));
+      f.el.setAttribute('opacity', (1 - p).toFixed(2));
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  function start(){
+    stop();
+    build();
+    phase = 'scan'; t = 0; tPhase = 0; found = 0; theta = Math.random()*40;
+    wrap.classList.remove('def', 'alert');
+    svg.classList.add('rdOn');
+    oldSweep.style.display = 'none';
+    setCount('تهديدات مكتشفة: 0');
+    last = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+  function alert(){
+    if(!layer) return;
+    phase = 'alert'; tPhase = 0;
+    wrap.classList.add('alert');
+    shock();
+    setCount('⚠ ' + blips.length + ' أهداف تقترب من النواة', 'alert');
+    breachTitle.classList.remove('hitGlitch'); void breachTitle.offsetWidth;
+    breachTitle.classList.add('hitGlitch');
+    setTimeout(()=> breachTitle.classList.remove('hitGlitch'), 700);
+  }
+  function defend(){
+    if(!layer) return;
+    phase = 'defend'; tPhase = 0;
+    wrap.classList.remove('alert');
+    wrap.classList.add('def');
+    shock(); setTimeout(shock, 260);
+    burst(100, 100, 0); burst(100, 100, .15); burst(100, 100, .3);
+    setCount('✔ الدفاع نشط — جارِ الصد', 'def');
+  }
+  function stop(){
+    if(raf){ cancelAnimationFrame(raf); raf = 0; }
+    if(layer){ layer.remove(); layer = null; }
+    if(counter){ counter.remove(); counter = null; }
+    fx = []; blips = []; sweepG = null; phase = 'idle';
+    oldSweep.style.display = '';
+    svg.classList.remove('rdOn');
+    wrap.classList.remove('alert', 'def');
+    wrap.querySelectorAll('.rdShock').forEach(e => e.remove());
+    breachTitle.classList.remove('hitGlitch');
+  }
+  return { start, alert, defend, stop };
+})();
+
 function hideScenes(){
+  Radar.stop();
   [awakenScene, breachOverlay, defenseOverlay].forEach(el=>{ el.style.display = 'none'; el.classList.remove('show'); });
   awakenScene.classList.remove('fadeOut');
   awakenCenterMark.classList.remove('show','opening');
@@ -1828,6 +2010,10 @@ async function runFullIntro(tok){
     requestAnimationFrame(()=> requestAnimationFrame(()=> breachOverlay.classList.add('show')));
   });
   L.at(T.HIT1 - 100, ()=> AudioMgr.play('alarm', { group:'intro' }));
+  L.at(T.BREACH + 100, Radar.start);
+  L.at(T.HIT1, Radar.alert);
+  L.at(T.HIT2, Radar.defend);
+  L.at(T.END + 600, Radar.stop);
   L.at(T.HIT1, ()=>{ revealWords(breachTitle, BREACH_TITLE_TEXT, 0, 110); Shake.trigger(6); flash('#ffffff', .25, .35); buzz(40); });
   L.at(T.HIT1 + 600, ()=> breachTitle.classList.add('pulse'));
   L.at(T.HIT1 + 700, ()=> breachSub.classList.add('show'));
